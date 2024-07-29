@@ -28,7 +28,7 @@ export default {
         };
     },
     mounted() {
-        fetch('http://localhost:8080/api/account/app', {credentials: 'include'})
+        fetch('https://ts.lwl.lol/api/account/app', {credentials: 'include'})
             .then(response => response.json())
             .then(data => {
                 let apps = []

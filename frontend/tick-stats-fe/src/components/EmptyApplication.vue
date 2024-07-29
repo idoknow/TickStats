@@ -55,7 +55,7 @@ const makeToast = (text, color = 'primary', timeout = 3000) => {
 };
 
 const createApplication = (isActive) => {
-    fetch('http://localhost:8080/api/account/app/new', {
+    fetch('https://ts.lwl.lol/api/account/app/new', {
         method: 'POST',
         credentials: 'include',
         headers: {

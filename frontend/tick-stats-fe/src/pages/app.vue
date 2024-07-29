@@ -115,7 +115,7 @@ export default {
     },
     methods: {
         createChart(isActive) {
-            fetch(`http://localhost:8080/api/account/app/${this.appId}/chart/new`, {
+            fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -136,7 +136,7 @@ export default {
             });
         },
         getCharts() {
-            fetch(`http://localhost:8080/api/account/app/${this.appId}/chart`, {
+            fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart`, {
                 credentials: 'include'
             }).then(response => response.json())
                 .then(data => {
@@ -153,7 +153,7 @@ export default {
         },
         getMetrics() {
             for (let i = 0; i < this.chartData.length; i++) {
-                fetch(`http://localhost:8080/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`)
+                fetch(`https://ts.lwl.lol/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`)
                     .then((response) => response.json())
                     .then((data) => {
                         if (this.chartData[i].chart_type === 'simple_line') {
@@ -199,7 +199,7 @@ export default {
 
         },
         mock() {
-            fetch(`http://localhost:8080/api/metric/${this.appId}`, {
+            fetch(`https://ts.lwl.lol/api/metric/${this.appId}`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

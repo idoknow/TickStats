@@ -53,7 +53,7 @@ export default {
     },
     methods: {
         deleteApplication() {
-            fetch(`http://localhost:8080/api/account/app/${this.app.name}`, {
+            fetch(`https://ts.lwl.lol/api/account/app/${this.app.name}`, {
                 method: 'DELETE',
                 credentials: 'include'
             }).then(response => {

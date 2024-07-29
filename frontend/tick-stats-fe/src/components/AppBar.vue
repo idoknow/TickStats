@@ -82,7 +82,7 @@ const makeToast = (text, color = 'primary', timeout = 3000) => {
 };
 
 const auth = () => {
-    fetch('http://localhost:8080/api/account/auth', {
+    fetch('https://ts.lwl.lol/api/account/auth', {
         method: 'GET',
         credentials: 'include',
     }).then((response) => {
@@ -101,7 +101,7 @@ const auth = () => {
 
 const login = (isActive) => {
     if (isNewUser.value) {
-        fetch('http://localhost:8080/api/account/register', {
+        fetch('https://ts.lwl.lol/api/account/register', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -123,7 +123,7 @@ const login = (isActive) => {
             makeToast(err, 'error');
         });
     } else {
-        fetch('http://localhost:8080/api/account/login', {
+        fetch('https://ts.lwl.lol/api/account/login', {
             method: 'POST',
             credentials: 'include',
             headers: {
