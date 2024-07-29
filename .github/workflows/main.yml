@@ -21,10 +21,10 @@ jobs:
           npm run build
           cd ../../
           ls
-      - name: Build Golang binary
-        run: |
-          ls
-          make build
+      # - name: Build Golang binary
+      #   run: |
+      #     ls
+      #     make build
       - name: Build image
         run: |
           ls
