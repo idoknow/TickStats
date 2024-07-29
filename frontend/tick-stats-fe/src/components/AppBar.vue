@@ -1,0 +1,152 @@
+<template>
+
+    <v-app-bar color="primary">
+        <v-app-bar-title style="font-weight: 1000;">TickStats</v-app-bar-title>
+
+        <template v-slot:append>
+            <!-- Login -->
+            <v-dialog max-width="500" v-if="account.name == ''">
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn v-bind:="activatorProps" variant="plain">Login</v-btn>
+                </template>
+
+                <template v-slot:default="{ isActive }">
+                    <v-card :title="AuthTitle[isNewUser]">
+
+                        <v-card-text>
+                            <v-text-field v-model="credentials.username" label="Username" outlined></v-text-field>
+                            <v-text-field v-model="credentials.email" label="Email" outlined
+                                v-if="isNewUser"></v-text-field>
+                            <v-text-field v-model="credentials.password" label="Password" outlined
+                                type="password"></v-text-field>
+
+                            <a style="text-decoration: underline; cursor: pointer" @click="isNewUser = !isNewUser"> {{
+                                AuthHint[isNewUser] }} </a>
+                        </v-card-text>
+
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn text @click="login(isActive)">
+                                {{ AuthTitle[isNewUser] }}
+                            </v-btn>
+                            <v-btn text="Close"
+                                @click="credentials.username = ''; credentials.password = ''; isActive.value = false;"></v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </template>
+            </v-dialog>
+            <span v-else style="margin-right: 16px;"> {{account.name}} </span>
+        </template>
+    </v-app-bar>
+
+
+    <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
+        {{ toast.text }}
+    </v-snackbar>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const AuthTitle = ref({
+    true: 'Sign up',
+    false: 'Login',
+})
+const AuthHint = ref({
+    true: 'Already have an account?',
+    false: 'Don\'t have an account?',
+})
+const isNewUser = ref(false);
+const credentials = ref({
+    username: '',
+    email: '',
+    password: '',
+});
+const account = ref({
+    name: '',
+    email: '',
+});
+
+
+const toast = ref({
+    show: false,
+    text: '',
+    color: 'primary',
+    timeout: 3000,
+});
+const makeToast = (text, color = 'primary', timeout = 3000) => {
+    toast.value.text = text;
+    toast.value.color = color;
+    toast.value.timeout = timeout;
+    toast.value.show = true;
+};
+
+const auth = () => {
+    fetch('http://localhost:8080/api/account/auth', {
+        method: 'GET',
+        credentials: 'include',
+    }).then((response) => {
+        if (response.status === 200) {
+            response.json().then((data) => {
+                account.value.name = data.name;
+                account.value.email = data.email;
+            });
+        } else {
+            makeToast('Not logged in', 'error');
+        }
+    }).catch((err) => {
+        makeToast(err, 'error');
+    });
+};
+
+const login = (isActive) => {
+    if (isNewUser.value) {
+        fetch('http://localhost:8080/api/account/register', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: credentials.value.username,
+                email: credentials.value.email,
+                password: credentials.value.password,
+            }),
+        }).then(() => {
+            if (response.status === 200) {
+                makeToast('Register successful', 'success');
+                isActive.value = false;
+            } else {
+                makeToast('Register failed', 'error');
+            }
+        }).catch((err) => {
+            makeToast(err, 'error');
+        });
+    } else {
+        fetch('http://localhost:8080/api/account/login', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: credentials.value.username,
+                password: credentials.value.password,
+            }),
+        }).then((response) => {
+            if (response.status === 200) {
+                makeToast('Login successful', 'success');
+                isActive.value = false;
+            } else {
+                makeToast('Login failed', 'error');
+            }
+
+        }).catch((err) => {
+            makeToast(err, 'error');
+        });
+    }
+};
+
+auth();
+
+</script>

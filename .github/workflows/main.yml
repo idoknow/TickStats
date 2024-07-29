@@ -1,0 +1,35 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+jobs:
+  publish-latest-docker-image:
+    runs-on: ubuntu-latest
+    name: Build and publish docker image
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: node
+        uses: actions/setup-node@v4.0.2
+      - name: Build static pages
+        run: | 
+          cd frontend/tick-stats-fe
+          npm install
+          npm run build
+          cd ../../
+          ls
+      - name: Build Golang binary
+        run: |
+          ls
+          make build
+      - name: Build image
+        run: |
+          ls
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/tickstats:latest .
+      - name: Publish image
+        run: |
+          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/tickstats:latest

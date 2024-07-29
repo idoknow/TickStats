@@ -1,0 +1,24 @@
+package routes
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/soulter/tickstats/controllers"
+	"github.com/soulter/tickstats/middlewares"
+)
+
+func RegisterAccountRoutes(router *gin.Engine, accountController controllers.AccountController) {
+	accountRoutes := router.Group("/api/account")
+	{
+		accountRoutes.POST("register", accountController.Register) // Register a new account
+		accountRoutes.POST("login", accountController.Login)       // Login
+	}
+
+	accountRoutes.Use(middlewares.JWTAuthMiddleware())
+	{
+		accountRoutes.GET("app", accountController.GetApplications)               // Get all applications
+		accountRoutes.POST("app/new", accountController.CreateApplication)        // Create a new application
+		accountRoutes.POST("app/:appid/chart/new", accountController.CreateChart) // Create a new line chart
+		accountRoutes.GET("app/:appid/chart", accountController.GetCharts)        // Get all charts
+		accountRoutes.GET("auth", accountController.GetAuth)                      // Get auth info
+	}
+}
