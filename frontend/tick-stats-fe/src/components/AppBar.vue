@@ -112,7 +112,7 @@ const login = (isActive) => {
                 email: credentials.value.email,
                 password: credentials.value.password,
             }),
-        }).then(() => {
+        }).then((response) => {
             if (response.status === 200) {
                 makeToast('Register successful', 'success');
                 isActive.value = false;
