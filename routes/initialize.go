@@ -48,10 +48,6 @@ func SetupRouter() *gin.Engine {
 	// from .env
 	// viper.SetConfigFile("config/.env")
 	viper.AutomaticEnv()
-	err = viper.ReadInConfig()
-	if err != nil {
-		panic(err)
-	}
 
 	var db *gorm.DB
 	var metricsDB *gorm.DB
