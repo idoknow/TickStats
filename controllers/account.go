@@ -72,16 +72,31 @@ func (controller *accountController) Login(c *gin.Context) {
 		return
 	}
 
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		Path:     "/",
-		Domain:   "localhost",
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-		HttpOnly: false,
-		MaxAge:   int(expirationTime.Unix()),
-	})
+	domain := c.Request.Header.Get("Origin")
+
+	if gin.Mode() == gin.DebugMode {
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "token",
+			Value:    tokenString,
+			Path:     "/",
+			Domain:   domain,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: false,
+			MaxAge:   int(expirationTime.Unix()),
+		})
+	} else {
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "token",
+			Value:    tokenString,
+			Path:     "/",
+			Domain:   domain,
+			Secure:   false,
+			SameSite: http.SameSiteStrictMode,
+			HttpOnly: false,
+			MaxAge:   int(expirationTime.Unix()),
+		})
+	}
 
 	// set cookie
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})

@@ -11,8 +11,8 @@ import (
 	"github.com/soulter/tickstats/repositories"
 	"github.com/soulter/tickstats/services"
 	"github.com/spf13/viper"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -21,22 +21,23 @@ func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
 	// CORS
-	router.Use(
-		cors.New(
-			cors.Config{
-				AllowOrigins: []string{
-					"http://localhost:3000",
-					"http://127.0.0.1:3000",
-					"https://ts.lwl.lol",
+	if gin.Mode() == gin.DebugMode {
+		router.Use(
+			cors.New(
+				cors.Config{
+					AllowOrigins: []string{
+						"http://localhost:3000",
+						"http://127.0.0.1:3000",
+					},
+					AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
+					AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
+					ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+					AllowCredentials: true,
+					MaxAge:           12 * time.Hour,
 				},
-				AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
-				AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
-				ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-				AllowCredentials: true,
-				MaxAge:           12 * time.Hour,
-			},
-		),
-	)
+			),
+		)
+	}
 
 	router.StaticFile("/", "./frontend/tick-stats-fe/dist/index.html")
 	router.Static("/assets", "./frontend/tick-stats-fe/dist/assets")
@@ -55,17 +56,18 @@ func SetupRouter() *gin.Engine {
 	var db *gorm.DB
 	var metricsDB *gorm.DB
 
-	// SQLite database
-	db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	// MySQL database
+	dsn := viper.GetString("MYSQL_USER") + ":" + viper.GetString("MYSQL_PASSWORD") + "@tcp(" + viper.GetString("MYSQL_HOST") + ":" + viper.GetString("MYSQL_PORT") + ")/" + viper.GetString("MYSQL_DBNAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect MySQL database")
 	}
 
 	// Postgres database
-	dsn := "host=" + viper.GetString("PG_HOST") + " user=" + viper.GetString("PG_USER") + " password=" + viper.GetString("PG_PASSWORD") + " dbname=" + viper.GetString("PG_DBNAME") + " port=" + viper.GetString("PG_PORT") + " sslmode=disable TimeZone=" + viper.GetString("PG_TIMEZONE")
+	dsn = "host=" + viper.GetString("PG_HOST") + " user=" + viper.GetString("PG_USER") + " password=" + viper.GetString("PG_PASSWORD") + " dbname=" + viper.GetString("PG_DBNAME") + " port=" + viper.GetString("PG_PORT") + " sslmode=disable TimeZone=" + viper.GetString("PG_TIMEZONE")
 	metricsDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect PostgreSQL database")
 	}
 
 	// Migrate the schema

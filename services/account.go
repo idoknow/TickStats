@@ -34,9 +34,8 @@ func NewAccountService(
 	}
 }
 
-func (service *accountService) Authenticate(email, password string) (*models.Account, error) {
-	// Find the account by email
-	account, err := service.accountRepository.FindByEmail(email)
+func (service *accountService) Authenticate(cred, password string) (*models.Account, error) {
+	account, err := service.accountRepository.FindByCredientials(cred)
 	if err != nil {
 		return nil, err
 	}
@@ -49,11 +48,11 @@ func (service *accountService) Authenticate(email, password string) (*models.Acc
 
 func (service *accountService) Register(name, email, password string) error {
 	// Check if the email is already taken
-	if _, err := service.accountRepository.FindByEmail(email); err == nil {
+	if _, err := service.accountRepository.FindByCredientials(email); err == nil {
 		return utils.ErrEmailTaken
 	}
 	// Check if the name is already taken
-	if _, err := service.accountRepository.FindByName(name); err == nil {
+	if _, err := service.accountRepository.FindByCredientials(name); err == nil {
 		return utils.ErrNameTaken
 	}
 

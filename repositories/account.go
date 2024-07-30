@@ -7,7 +7,7 @@ import (
 
 type AccountRepository interface {
 	Create(account *models.Account) error
-	FindByEmail(email string) (*models.Account, error)
+	FindByCredientials(email string) (*models.Account, error)
 	FindByName(name string) (*models.Account, error)
 	FindByAccountID(accountId int) (*models.Account, error)
 }
@@ -24,9 +24,9 @@ func (r *accountRepository) Create(account *models.Account) error {
 	return r.db.Create(account).Error
 }
 
-func (r *accountRepository) FindByEmail(email string) (*models.Account, error) {
+func (r *accountRepository) FindByCredientials(cred string) (*models.Account, error) {
 	var account models.Account
-	if err := r.db.Where("email = ?", email).First(&account).Error; err != nil {
+	if err := r.db.Where("email = ?", cred).Or("name = ?", cred).First(&account).Error; err != nil {
 		return nil, err
 	}
 	return &account, nil
