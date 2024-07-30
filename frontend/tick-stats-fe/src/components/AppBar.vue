@@ -1,9 +1,11 @@
 <template>
 
     <v-app-bar color="primary">
-        <v-app-bar-title style="font-weight: 1000;">TickStats</v-app-bar-title>
+        <v-app-bar-title style="font-weight: 1000; cursor: pointer" @click="$router.push('/')">TickStats</v-app-bar-title>
+
 
         <template v-slot:append>
+            <v-btn variant="plain" @click="$router.push('/help')">How to use</v-btn>
             <!-- Login -->
             <v-dialog max-width="500" v-if="account.name == ''">
                 <template v-slot:activator="{ props: activatorProps }">

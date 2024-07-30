@@ -3,7 +3,7 @@
     <div style="padding: 128px; display: flex; flex-direction: column; align-items: center;">
         <!-- h1 靠左 -->
         <h1 style="text-align: left; margin-bottom: 32px;">Your Apps</h1>
-        <EmptyApplication />
+        <EmptyApplication @create="fetchApps"/>
         <ApplicationItem v-for="app in apps" :app="app" :key="app.name"/>
     </div>
     
@@ -28,7 +28,11 @@ export default {
         };
     },
     mounted() {
-        fetch('https://ts.lwl.lol/api/account/app', {credentials: 'include'})
+        this.fetchApps();
+    },
+    methods: {
+        fetchApps() {
+            fetch('https://ts.lwl.lol/api/account/app', {credentials: 'include'})
             .then(response => response.json())
             .then(data => {
                 let apps = []
@@ -45,8 +49,7 @@ export default {
             }).catch(error => {
                 console.error(error);
             });
-    },
-    methods: {
+        }
     }
 }
 

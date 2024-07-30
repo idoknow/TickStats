@@ -4,7 +4,7 @@
     <div class="content" style="padding: 32px 128px; display: flex; flex-direction: column; align-items: center;">
         <h1 class="gradient" v-if="accountName !== ''" style="font-size: 56px;">{{ accountName }}/{{ appName }} Stats
         </h1>
-        <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn>
+        <!-- <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn> -->
         <v-dialog max-width="500">
             <template v-slot:activator="{ props: activatorProps }">
                 <v-btn style="margin: 32px;" v-bind:="activatorProps">Create Chart</v-btn>
@@ -35,7 +35,9 @@
         </v-dialog>
     </div>
 
-
+    <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
+        {{ toast.text }}
+    </v-snackbar>
 
 </template>
 
@@ -43,6 +45,7 @@
 import AppBar from '@/components/AppBar.vue';
 import moment from 'moment';
 import * as echarts from 'echarts';
+import { th } from 'vuetify/locale';
 
 export default {
     components: {
@@ -50,6 +53,12 @@ export default {
     },
     data() {
         return {
+            toast: {
+                show: false,
+                text: '',
+                color: 'primary',
+                timeout: 3000,
+            },
             chartInstance: {},
             mock_os: ['Windows', 'Linux', 'MacOS'],
             chartData: null,
@@ -114,6 +123,12 @@ export default {
         });
     },
     methods: {
+        makeToast(text, color = 'primary', timeout = 3000) {
+            this.toast.text = text;
+            this.toast.color = color;
+            this.toast.timeout = timeout;
+            this.toast.show = true;
+        },
         createChart(isActive) {
             fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
@@ -130,9 +145,12 @@ export default {
             }).then(response => {
                 if (response.ok) {
                     isActive.value = false;
+                    this.makeToast('Chart created successfully');
+                    this.getCharts();
                 }
             }).catch(error => {
                 console.error(error);
+                this.makeToast('Failed to create chart', 'error');
             });
         },
         getCharts() {
@@ -149,6 +167,7 @@ export default {
                     }
                 }).catch(error => {
                     console.error(error);
+                    this.makeToast('Failed to get charts', 'error');
                 });
         },
         getMetrics() {
