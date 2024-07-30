@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  app:
+    container_name: tickstats
+    image: soulter/tickstats:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - PG_DS="host=hostname port=5432 user=postgres password=password dbname=tickstats sslmode=disable TIMEZONE=Asia/Shanghai"
+      - MYSQL_DS="root:password@tcp(hostname:3306)/tickstats?charset=utf8mb4&parseTime=True&loc=Local"
+    depends_on:
+      - db
+    networks:
+      - tickstats
+
+  mysql:
+    container_name: tickstats-mysql
+    image: mysql:lts
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: tickstats
+    ports:
+      - "3306:3306"
+    networks:
+      - tickstats
+
+  timescaledb:
+    container_name: tickstats-timescaledb
+    image: timescale/timescaledb-ha:pg16
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tickstats
+    ports:
+      - "5432:5432"
+    networks:
+      - tickstats

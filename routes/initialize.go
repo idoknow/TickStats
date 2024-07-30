@@ -46,7 +46,7 @@ func SetupRouter() *gin.Engine {
 	config.LoadConfig()
 
 	// from .env
-	viper.SetConfigFile("config/.env")
+	// viper.SetConfigFile("config/.env")
 	viper.AutomaticEnv()
 	err = viper.ReadInConfig()
 	if err != nil {
@@ -57,14 +57,14 @@ func SetupRouter() *gin.Engine {
 	var metricsDB *gorm.DB
 
 	// MySQL database
-	dsn := viper.GetString("MYSQL_USER") + ":" + viper.GetString("MYSQL_PASSWORD") + "@tcp(" + viper.GetString("MYSQL_HOST") + ":" + viper.GetString("MYSQL_PORT") + ")/" + viper.GetString("MYSQL_DBNAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := viper.GetString("MYSQL_DSN")
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect MySQL database")
 	}
 
 	// Postgres database
-	dsn = "host=" + viper.GetString("PG_HOST") + " user=" + viper.GetString("PG_USER") + " password=" + viper.GetString("PG_PASSWORD") + " dbname=" + viper.GetString("PG_DBNAME") + " port=" + viper.GetString("PG_PORT") + " sslmode=disable TimeZone=" + viper.GetString("PG_TIMEZONE")
+	dsn = viper.GetString("PG_DSN")
 	metricsDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect PostgreSQL database")
