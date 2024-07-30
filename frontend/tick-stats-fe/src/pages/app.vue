@@ -1,8 +1,8 @@
 <template>
     <AppBar />
 
-    <div class="content" style="padding: 32px 128px; display: flex; flex-direction: column; align-items: center;">
-        <h1 class="gradient" v-if="accountName !== ''" style="font-size: 56px;">{{ accountName }}/{{ appName }} Stats
+    <div class="content">
+        <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
         </h1>
         <!-- <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn> -->
         <v-dialog max-width="500">
@@ -45,7 +45,6 @@
 import AppBar from '@/components/AppBar.vue';
 import moment from 'moment';
 import * as echarts from 'echarts';
-import { th } from 'vuetify/locale';
 
 export default {
     components: {
@@ -267,5 +266,18 @@ export default {
     background: linear-gradient(45deg, #2196F3, #21CBF3);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.content {
+    padding: 32px 128px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+}
+
+@media (max-width: 600px) {
+    .content {
+        padding: 32px 16px;
+    }
 }
 </style>

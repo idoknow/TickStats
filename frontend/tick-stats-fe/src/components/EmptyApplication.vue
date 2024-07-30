@@ -1,8 +1,8 @@
 <template>
     <v-dialog max-width="500">
         <template v-slot:activator="{ props: activatorProps }">
-            <v-list-item v-bind:="activatorProps" style="cursor: pointer; margin-bottom: 24px" border="opacity-50 md"
-                lines="two" max-width="600" min-width="600" rounded="lg" variant="flat">
+            <v-list-item  v-bind:="activatorProps" class="dash-item" border="opacity-50 md"
+                lines="two" max-width="600" rounded="lg" variant="flat">
                 <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
                     <v-icon size="48" color="#777">mdi-plus</v-icon>
                 </div>
@@ -76,3 +76,20 @@ const createApplication = (isActive) => {
     });
 }
 </script>
+
+
+<style>
+
+.dash-item {
+    cursor: pointer; 
+    margin-bottom: 24px; 
+    min-width:600px
+}
+
+@media (max-width: 600px) {
+    .dash-item {
+        min-width: 360px;
+    }
+}
+
+</style>

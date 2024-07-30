@@ -1,7 +1,7 @@
 <template>
     <AppBar />
-    <div style="display: flex; align-items: center; justify-content: center; padding: 64px; flex-direction: column;">
-        <h1 class="gradient" style="font-size: 64px;">How to use?</h1>
+    <div class="index-main">
+        <h1 class="gradient index-title">How to use?</h1>
         <h2>Post Data</h2>
         <p class="text">Post your metric data via <span class="quote">`POST https://mc.lwl.lol/api/metric/:appid`</span> </p>
         <p class="text">Body should be a JSON object with <span class="quote">`metrics_data`</span> field
@@ -88,4 +88,27 @@ export default {
     border-radius: 4px;
     font-weight: bold;
 }
+
+
+.index-main {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 64px; 
+    flex-direction: column;
+  }
+  
+  .index-title {
+    font-size: 64px;
+  }
+  
+  @media (max-width: 600px) {
+    .index-main {
+      padding: 32px;
+    }
+  
+    .index-title {
+      font-size: 48px;
+    }
+  }
 </style>

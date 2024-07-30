@@ -1,5 +1,5 @@
 <template>
-    <v-list-item  border="opacity-50 md" lines="two" max-width="600" min-width="600" style="margin-bottom: 24px;"
+    <v-list-item  border="opacity-50 md" lines="two" max-width="600" class="dash-item"
         prepend-avatar="https://cdn.vuetifyjs.com/docs/images/one/logos/one.png" rounded="lg" variant="flat">
         <v-list-item-title>
             <span class="text-h6">{{ app.name }}</span>
@@ -27,7 +27,7 @@
 
             <v-fade-transition mode="out-in">
                 <v-btn :key="`info-${isDelete}`" :color="isDelete ? 'error' : 'primary'"
-                    :prepend-icon="isDelete ? 'mdi-check' : 'mdi-open-in-new'" :readonly="isDelete"
+                    :prepend-icon="isDelete ? 'mdi-check' : 'mdi-open-in-new'"
                     :text="isDelete ? 'Delete' : 'Visit'" class="text-none" size="small" variant="flat"
                     @click="isDelete ? deleteApplication() : visitApplication()"
                     flat></v-btn>
@@ -70,3 +70,19 @@ export default {
     }
 }
 </script>
+
+<style>
+
+.dash-item {
+    cursor: pointer; 
+    margin-bottom: 24px; 
+    min-width:600px
+}
+
+@media (max-width: 600px) {
+    .dash-item {
+        min-width: 360px;
+    }
+}
+
+</style>

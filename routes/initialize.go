@@ -42,6 +42,18 @@ func SetupRouter() *gin.Engine {
 	router.StaticFile("/", "./frontend/tick-stats-fe/dist/index.html")
 	router.Static("/assets", "./frontend/tick-stats-fe/dist/assets")
 
+	// redirect to /
+	router.GET("/dashboard", func(c *gin.Context) {
+		c.Redirect(301, "/")
+	})
+	// redirect /app and its subroutes to /
+	router.GET("/app/*any", func(c *gin.Context) {
+		c.Redirect(301, "/")
+	})
+	router.GET("/help", func(c *gin.Context) {
+		c.Redirect(301, "/")
+	})
+
 	// Initialize configuration
 	config.LoadConfig()
 
