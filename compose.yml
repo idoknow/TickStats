@@ -10,8 +10,10 @@ services:
       - PORT=8080
       - PG_DS="host=hostname port=5432 user=postgres password=password dbname=tickstats sslmode=disable TIMEZONE=Asia/Shanghai"
       - MYSQL_DS="root:password@tcp(hostname:3306)/tickstats?charset=utf8mb4&parseTime=True&loc=Local"
+      - GIN_MODE=release
     depends_on:
-      - db
+      - mysql
+      - timescaledb
     networks:
       - tickstats
 
