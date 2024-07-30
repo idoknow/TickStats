@@ -15,6 +15,7 @@ type AccountController interface {
 	Register(c *gin.Context)
 	Login(c *gin.Context)
 	CreateApplication(c *gin.Context)
+	DeleteApplication(c *gin.Context)
 	GetApplications(c *gin.Context)
 	CreateChart(c *gin.Context)
 	GetCharts(c *gin.Context)
@@ -126,6 +127,18 @@ func (controller *accountController) CreateApplication(c *gin.Context) {
 	accountId := int(userId.(float64))
 
 	if err := controller.accountService.CreateApplication(accountId, application.Name); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+}
+
+func (controller *accountController) DeleteApplication(c *gin.Context) {
+	appId := c.Param("appid")
+
+	userId, _ := c.Get("userID")
+	accountId := int(userId.(float64))
+
+	if err := controller.accountService.DeleteApplication(accountId, appId); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}

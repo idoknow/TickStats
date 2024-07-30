@@ -10,6 +10,7 @@ type AccountService interface {
 	Authenticate(email, password string) (*models.Account, error)
 	Register(name, email, password string) error
 	CreateApplication(accountId int, name string) error
+	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
 	CreateChart(appId string, name string, chartType string, keyName string) error
 	GetCharts(appId string) ([]models.Chart, error)
@@ -85,6 +86,29 @@ func (service *accountService) CreateApplication(accountId int, name string) err
 
 	// Save the application to the database
 	if err := service.applicationRepository.Create(&application); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *accountService) DeleteApplication(accountId int, appId string) error {
+	// Find the application by application ID
+	application, err := service.applicationRepository.FindByAppID(appId)
+	if err != nil {
+		return err
+	}
+	if application == nil {
+		return utils.ErrAppNotFound
+	}
+
+	// Check if the application belongs to the account
+	if application.AccountId != accountId {
+		return utils.ErrUnauthorized
+	}
+
+	// Delete the application from the database
+	if err := service.applicationRepository.Delete(appId); err != nil {
 		return err
 	}
 

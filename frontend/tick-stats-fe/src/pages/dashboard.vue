@@ -4,7 +4,7 @@
         <!-- h1 靠左 -->
         <h1 style="text-align: left; margin-bottom: 32px;">Your Apps</h1>
         <EmptyApplication @create="fetchApps"/>
-        <ApplicationItem v-for="app in apps" :app="app" :key="app.name"/>
+        <ApplicationItem v-for="app in apps" :app="app" :key="app.name" @delete="fetchApps"/>
     </div>
     
 </template>

@@ -12,7 +12,7 @@
                 </div>
 
                 <div v-else key="not-subscribed" class="text-caption">
-                    {{ app.description }}
+                    {{ app.app_id }}
                 </div>
             </v-scroll-y-reverse-transition>
         </v-list-item-subtitle>
@@ -53,12 +53,12 @@ export default {
     },
     methods: {
         deleteApplication() {
-            fetch(`https://ts.lwl.lol/api/account/app/${this.app.name}`, {
+            fetch(`https://ts.lwl.lol/api/account/app/${this.app.app_id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             }).then(response => {
                 if (response.ok) {
-                    this.$emit('delete', this.app.name)
+                    this.$emit('delete')
                 }
             }).catch(error => {
                 console.error(error)

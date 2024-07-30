@@ -69,7 +69,7 @@ const createApplication = (isActive) => {
             isActive.value = false;
             appName.value = '';
             makeToast('Application created successfully', 'success');
-            $emit('create');
+            this.$emit('create');
         } else {
             makeToast('Failed to create application', 'error');
         }

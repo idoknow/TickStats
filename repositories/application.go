@@ -7,6 +7,7 @@ import (
 
 type ApplicationRepository interface {
 	Create(application *models.Application) error
+	Delete(appId string) error
 	FindByAccountID(accountId int) ([]models.Application, error)
 	FindByAppID(appId string) (*models.Application, error)
 }
@@ -21,6 +22,10 @@ func NewApplicationRepository(db *gorm.DB) ApplicationRepository {
 
 func (r *applicationRepository) Create(application *models.Application) error {
 	return r.db.Create(application).Error
+}
+
+func (r *applicationRepository) Delete(appId string) error {
+	return r.db.Where("app_id = ?", appId).Delete(&models.Application{}).Error
 }
 
 func (r *applicationRepository) FindByAccountID(accountId int) ([]models.Application, error) {

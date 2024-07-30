@@ -12,4 +12,5 @@ var (
 	ErrInvalidChartType = fmt.Errorf("invalid chart type")
 	ErrAppNotFound      = fmt.Errorf("application not found")
 	ErrAccountNotFound  = fmt.Errorf("account not found")
+	ErrUnauthorized     = fmt.Errorf("unauthorized")
 )
