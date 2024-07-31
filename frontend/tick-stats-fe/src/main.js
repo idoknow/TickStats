@@ -12,11 +12,12 @@ import App from './App.vue'
 
 // Composables
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 
 const app = createApp(App)
 
-const baseUrl = "https://ts.lwl.lol"
-app.config.globalProperties.baseUrl = baseUrl;
+// Pinia
+app.use(createPinia())
 
 registerPlugins(app)
 

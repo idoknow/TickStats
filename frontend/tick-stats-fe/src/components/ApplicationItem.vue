@@ -50,6 +50,8 @@ const isDelete = shallowRef(false)
 </script>
 
 <script>
+import { fetchWrapper } from '@/assets/utils';
+
 export default {
     name: 'ApplicationItem',
     props: {
@@ -60,14 +62,11 @@ export default {
     },
     methods: {
         deleteApplication() {
-            fetch(`https://ts.lwl.lol/api/account/app/${this.app.app_id}`, {
+            fetchWrapper(`/api/account/app/${this.app.app_id}`, {
                 method: 'DELETE',
-                credentials: 'include'
-            }).then(response => {
-                if (response.ok) {
-                    this.$emit('delete')
-                }
-            }).catch(error => {
+            }).then(() => {
+                this.$emit('delete')
+            }).catch((error) => {
                 console.error(error)
             })
         },

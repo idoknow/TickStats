@@ -13,7 +13,7 @@
 
     
     <div class="code-wrap">
-      <pre class="index-code"><span style="font-weight:bold">POST</span> https://ts.lwl.lol/api/metric/:appid</pre>
+      <pre class="index-code"><span style="font-weight:bold">POST</span> {{global.baseUrl}}/api/metric/:appid</pre>
     </div>
 
     <v-row style="margin-top: 64px; gap: 16px" justify="center">
@@ -52,6 +52,7 @@ import AppBar from '@/components/AppBar.vue';
 </script>
 
 <script>
+import { useGlobalStore } from '@/stores/global';
 
 export default {
   name: 'Index',
@@ -60,11 +61,8 @@ export default {
   },
   data() {
     return {
+      global: useGlobalStore()
     };
-  },
-  mounted() {
-  },
-  methods: {
   }
 }
 

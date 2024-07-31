@@ -32,7 +32,7 @@
                             </v-card-text>
                         </div>
 
-                        <div style="flex:2; margin-top:16px" v-if="newChart.chart_type!=''">
+                        <div style="flex:2; margin-top:16px" v-if="newChart.chart_type != ''">
                             <h3>Chart Demo</h3>
                             <div id="chart-demo" style="width: 100%; height: 300px"></div>
                             <h3>Data Example</h3>
@@ -46,7 +46,7 @@
                         <v-btn text @click="createChart(isActive)">
                             Create
                         </v-btn>
-                        <v-btn text="Close" @click="isActive.value=false; onCloseCreateChartDialog()">Close</v-btn>
+                        <v-btn text="Close" @click="isActive.value = false; onCloseCreateChartDialog()">Close</v-btn>
                     </v-card-actions>
                 </v-card>
             </template>
@@ -61,8 +61,8 @@
 
 <script>
 import AppBar from '@/components/AppBar.vue';
-import moment from 'moment';
 import * as echarts from 'echarts';
+import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel } from '@/assets/utils';
 
 export default {
     components: {
@@ -88,45 +88,6 @@ export default {
                 description: '',
                 chart_type: '',
                 public: false
-            },
-            simpleLineChartOptionModel: {
-                tooltip: {
-                    trigger: 'axis'
-                },
-                calculable: true,
-                xAxis: {
-                    type: 'category',
-                    axisLabel: {
-                        formatter: function (value) {
-                            return moment(value).format('MM-DD HH:mm');
-                        }
-                    }
-                },
-                yAxis: {
-                    type: 'value'
-                },
-                color: ['#21CBF3'],
-                dataZoom: [
-                    {
-                        show: true,
-                        realtime: true,
-                    }
-                ],
-            },
-            simplePieChartOptionModel: {
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{a} <br/>{b} : {c} ({d}%)'
-                },
-                padAngle: 5,
-                itemStyle: {
-                    borderRadius: 5
-                },
-                legend: {
-                    orient: 'vertical',
-                    left: 'left',
-                    data: []
-                },
             },
             chartOptions: [],
             onCreatingChart: false,
@@ -171,29 +132,23 @@ export default {
         },
         createChart(isActive) {
             this.newChart.appid = this.appId;
-            fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart/new`, {
+            fetchWrapper(`/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.newChart)
-            }).then(response => {
-                if (response.ok) {
-                    isActive.value = false;
-                    this.makeToast('Chart created successfully');
-                    this.getCharts();
-                    this.newChart = {
-                        chart_name: '',
-                        key_name: '',
-                        chart_type: '',
-                        public: false,
-                        description: '',
-                        appid: ''
-                    };
-                    this.onCreatingChart = false
-                }
-            }).catch(error => {
+                body: JSON.stringify(this.newChart),
+            }).then(() => {
+                isActive.value = false;
+                this.makeToast('Chart created successfully');
+                this.getCharts();
+                this.newChart = {
+                    chart_name: '',
+                    key_name: '',
+                    chart_type: '',
+                    public: false,
+                    description: '',
+                    appid: ''
+                };
+                this.onCreatingChart = false
+            }).catch((error) => {
                 console.error(error);
                 this.makeToast('Failed to create chart', 'error');
             });
@@ -204,7 +159,7 @@ export default {
             // demo
             if (this.newChart.chart_type === 'simple_line') {
                 this.updateChart('chart-demo', {
-                    ...this.simpleLineChartOptionModel,
+                    ...simpleLineChartOptionModel,
                     title: {
                         text: this.newChart.chart_name
                     },
@@ -214,11 +169,10 @@ export default {
                             data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 100))
                         }
                     ],
-                    _chart_type: 'simple_line'
                 });
             } else if (this.newChart.chart_type === 'simple_pie') {
                 this.updateChart('chart-demo', {
-                    ...this.simplePieChartOptionModel,
+                    ...simplePieChartOptionModel,
                     title: {
                         text: this.newChart.chart_name
                     },
@@ -234,7 +188,6 @@ export default {
                             })
                         }
                     ],
-                    _chart_type: 'simple_pie'
                 });
             }
         },
@@ -258,88 +211,82 @@ export default {
         },
 
         getCharts() {
-            fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart`, {
-                credentials: 'include'
-            }).then(response => response.json())
-                .then(data => {
-                    this.chartData = data;
+            fetchWrapper(`/api/account/app/${this.appId}/chart`, {
+                method: 'GET',
+            }).then((data) => {
+                this.chartData = data;
 
-                    if (this.chartData.length > 0) {
-                        this.accountName = this.chartData[0].account_name;
-                        this.appName = this.chartData[0].app_name;
-                        this.getMetrics();
-                    }
-                }).catch(error => {
-                    console.error(error);
-                    this.makeToast('Failed to get charts', 'error');
-                });
+                if (this.chartData.length > 0) {
+                    this.accountName = this.chartData[0].account_name;
+                    this.appName = this.chartData[0].app_name;
+                    this.getMetrics();
+                }
+            }).catch((error) => {
+                console.error(error);
+                this.makeToast('Failed to get charts', 'error');
+            });
         },
         getMetrics() {
             for (let i = 0; i < this.chartData.length; i++) {
-                fetch(`https://ts.lwl.lol/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (this.chartData[i].chart_type === 'simple_line') {
-                            this.chartOptions.push({
-                                ...this.simpleLineChartOptionModel,
-                                title: {
-                                    text: this.chartData[i].chart_name
-                                },
-                                series: [
-                                    {
-                                        type: 'line',
-                                        data: data.map((item) => {
-                                            return [item.k, item.v];
-                                        })
-                                    }
-                                ],
-                                _chart_type: 'simple_line'
-                            });
-                        } else if (this.chartData[i].chart_type === 'simple_pie') {
-                            this.chartOptions.push({
-                                ...this.simplePieChartOptionModel,
-                                title: {
-                                    text: this.chartData[i].chart_name
-                                },
-                                series: [
-                                    {
-                                        name: this.chartData[i].chart_name,
-                                        type: 'pie',
-                                        data: data.map((item) => {
-                                            return {
-                                                name: item.k,
-                                                value: item.v
-                                            }
-                                        })
-                                    }
-                                ],
-                                _chart_type: 'simple_pie'
-                            });
-                        }
-                        this.updateChart(this.chartData[i].chart_name, this.chartOptions[this.chartOptions.length - 1]);
-                    });
+                fetchWrapper(`/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`, {
+                    method: 'GET',
+                }).then((data) => {
+                    if (this.chartData[i].chart_type === 'simple_line') {
+                        this.updateChart(this.chartData[i].chart_name, {
+                            ...simpleLineChartOptionModel,
+                            title: {
+                                text: this.chartData[i].chart_name
+                            },
+                            series: [
+                                {
+                                    type: 'line',
+                                    data: data.map((item) => {
+                                        return [item.k, item.v];
+                                    })
+                                }
+                            ],
+                        });
+                    } else if (this.chartData[i].chart_type === 'simple_pie') {
+                        this.updateChart(this.chartData[i].chart_name, {
+                            ...simplePieChartOptionModel,
+                            title: {
+                                text: this.chartData[i].chart_name
+                            },
+                            series: [
+                                {
+                                    name: this.chartData[i].chart_name,
+                                    type: 'pie',
+                                    data: data.map((item) => {
+                                        return {
+                                            name: item.k,
+                                            value: item.v
+                                        }
+                                    })
+                                }
+                            ],
+                        });
+                    }
+                }).catch((error) => {
+                    console.error(error);
+                    this.makeToast('Failed to get metrics', 'error');
+                });
             }
 
         },
         mock() {
-            fetch(`https://ts.lwl.lol/api/metric/${this.appId}`, {
+            fetchWrapper(`/api/metric/${this.appId}`, {
                 method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({
                     metrics_data: {
                         "cnt_usage": Math.floor(Math.random() * 100),
                         "os_name": this.mock_os[Math.floor(Math.random() * this.mock_os.length)]
                     }
                 })
-            }).then(response => {
-                if (response.ok) {
-                    this.getMetrics();
-                }
-            }).catch(error => {
+            }).then(() => {
+                this.getMetrics();
+            }).catch((error) => {
                 console.error(error);
+                this.makeToast('Failed to mock data', 'error');
             });
         },
         updateChart(divId, option) {
@@ -388,7 +335,7 @@ export default {
     flex-direction: row;
     align-items: center;
     overflow-y: scroll;
-    gap:16px
+    gap: 16px
 }
 
 @media (max-width: 600px) {
@@ -402,7 +349,7 @@ export default {
 
     .create-chart-container {
         flex-direction: column;
-        
+
     }
 }
 </style>

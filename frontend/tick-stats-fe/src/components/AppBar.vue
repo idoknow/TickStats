@@ -9,7 +9,7 @@
         </template>
 
         <template v-slot:append>
-            <v-dialog v-model="loginDialog" max-width="500" v-if="account.name == ''">
+            <v-dialog v-model="loginDialog" max-width="500" v-if="global.account.name == ''">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn v-bind:="activatorProps" variant="plain">Login</v-btn>
                 </template>
@@ -41,7 +41,7 @@
                     </v-card>
                 </template>
             </v-dialog>
-            <span v-else style="margin-right: 16px;"> {{ account.name }} </span>
+            <span v-else style="margin-right: 16px;"> {{ global.account.name }} </span>
         </template>
     </v-app-bar>
 
@@ -57,7 +57,7 @@
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
                 :value="item.value" @click="router(item.value)" :active="nav == item.value" </v-list-item>
-            <v-divider></v-divider>
+                <v-divider></v-divider>
         </v-list>
     </v-navigation-drawer>
 
@@ -68,6 +68,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { fetchWrapper } from '@/assets/utils';
 
 const AuthTitle = ref({
     true: 'Sign up',
@@ -97,53 +98,36 @@ const makeToast = (text, color = 'primary', timeout = 3000) => {
     toast.value.show = true;
 };
 
-const login = (isActive) => {
+const login = async (isActive) => {
     if (isNewUser.value) {
-        fetch('https://ts.lwl.lol/api/account/register', {
+        fetchWrapper('/api/account/register', {
             method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 name: credentials.value.username,
                 email: credentials.value.email,
                 password: credentials.value.password,
             }),
-        }).then((response) => {
-            if (response.status === 200) {
-                makeToast('Register successful', 'success');
-                isActive.value = false;
-                isNewUser.value = false;
-                credentials.value.email = '';
-                credentials.value.username = '';
-                credentials.value.password = '';
-            } else {
-                makeToast('Register failed', 'error');
-            }
+        }).then(() => {
+            makeToast('Register successful', 'success');
+            isActive.value = false;
+            isNewUser.value = false;
+            credentials.value.email = '';
+            credentials.value.username = '';
+            credentials.value.password = '';
         }).catch((err) => {
             makeToast(err, 'error');
         });
     } else {
-        fetch('https://ts.lwl.lol/api/account/login', {
+        fetchWrapper('/api/account/login', {
             method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 username: credentials.value.username,
                 password: credentials.value.password,
             }),
-        }).then((response) => {
-            if (response.status === 200) {
-                makeToast('Login successful', 'success');
-                isActive.value = false;
-                auth();
-            } else {
-                makeToast('Login failed', 'error');
-            }
-
+        }).then(() => {
+            makeToast('Login successful', 'success');
+            isActive.value = false;
+            auth();
         }).catch((err) => {
             makeToast(err, 'error');
         });
@@ -153,6 +137,10 @@ const login = (isActive) => {
 </script>
 
 <script>
+import { fetchWrapper } from '@/assets/utils';
+import { useGlobalStore } from '@/stores/global';
+
+
 export default {
     data() {
         return {
@@ -166,11 +154,8 @@ export default {
                 { title: 'World Stats', icon: 'mdi-chart-bar', value: 1 },
                 { title: 'Settings', icon: 'mdi-cog', value: 2 },
                 { title: 'Sign in/up', icon: 'mdi-account', value: 3 },
-            ],  
-            account: {
-                name: '',
-                email: '',
-            }
+            ],
+            global: useGlobalStore(),
         };
     },
     props: {
@@ -182,25 +167,23 @@ export default {
     mounted() {
         this.checkScreenWidth();
         window.addEventListener('resize', this.checkScreenWidth);
-        this.auth();
+
+        if (this.global.account.name === '') {
+            this.auth();
+        }
     },
     methods: {
         auth() {
-            fetch('https://ts.lwl.lol/api/account/auth', {
+            fetchWrapper('/api/account/auth', {
                 method: 'GET',
-                credentials: 'include',
-            }).then((response) => {
-                if (response.status === 200) {
-                    response.json().then((data) => {
-                        account.name = data.name;
-                        account.email = data.email;
-                    });
-                } else {
-                    // makeToast('Not logged in', 'error');
-                    this.$emit('error', 'You need to login to use this service :)');
-                }
+            }).then((data) => {
+                this.global.updateState({
+                    account: {
+                        name: data.name,
+                        email: data.email,
+                    }
+                })
             }).catch((err) => {
-                // makeToast(err, 'error');
                 this.$emit('error', 'Something went wrong, please try again later: ' + err);
             });
         },

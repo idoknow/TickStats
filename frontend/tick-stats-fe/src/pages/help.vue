@@ -38,7 +38,7 @@
                 <div>
                     <strong class="me-4">3. Post your metric data</strong>
                     <div class="text-caption">
-                        Post your metric data via <span class="quote">`POST https://ts.lwl.lol/api/metric/:appid`</span>
+                        Post your metric data via <span class="quote">`POST {{ global.baseUrl }}/api/metric/:appid`</span>
                     </div>
                     <div class="text-caption">
                         Body should be a JSON object with <span class="quote">`metrics_data`</span> field. 
@@ -72,6 +72,8 @@
 
 <script>
 import AppBar from '@/components/AppBar.vue';
+import { useGlobalStore } from '@/stores/global';
+
 export default {
     name: 'Index',
     components: {
@@ -117,13 +119,10 @@ export default {
                     dataExample: ""
                 }
                     
-            ]
+            ],
+            global: useGlobalStore()
         };
     },
-    mounted() {
-    },
-    methods: {
-    }
 }
 </script>
 

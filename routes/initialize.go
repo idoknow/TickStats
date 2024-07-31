@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/soulter/tickstats/config"
 	"github.com/soulter/tickstats/controllers"
 	"github.com/soulter/tickstats/models"
@@ -19,6 +20,9 @@ import (
 func SetupRouter() *gin.Engine {
 	var err error
 	router := gin.Default()
+
+	// Load .env file
+	_ = godotenv.Load()
 
 	// CORS
 	if gin.Mode() == gin.DebugMode {
@@ -44,14 +48,18 @@ func SetupRouter() *gin.Engine {
 
 	// redirect to /
 	router.GET("/dashboard", func(c *gin.Context) {
-		c.Redirect(301, "/")
+		// rewrite index.html to / so that the frontend router can handle the route
+		c.File("./frontend/tick-stats-fe/dist/index.html")
 	})
 	// redirect /app and its subroutes to /
 	router.GET("/app/*any", func(c *gin.Context) {
-		c.Redirect(301, "/")
+		c.File("./frontend/tick-stats-fe/dist/index.html")
 	})
 	router.GET("/help", func(c *gin.Context) {
-		c.Redirect(301, "/")
+		c.File("./frontend/tick-stats-fe/dist/index.html")
+	})
+	router.GET("/world", func(c *gin.Context) {
+		c.File("./frontend/tick-stats-fe/dist/index.html")
 	})
 
 	// Initialize configuration

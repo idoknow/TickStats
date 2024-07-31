@@ -3,7 +3,9 @@
     <div class='index-main'>
         <h1 class="gradient index-title">Worlds' Stats</h1>
         <p style="font-size: 22px; color: #777; margin-bottom:32px">See the public stats.</p>
-
+        <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px">
+            {{ errAlert }}
+        </v-alert>
         <ApplicationItem v-for="app in apps" :key="app.app_id" :app="app" />
     </div>
 
@@ -44,6 +46,7 @@
 <script>
 import AppBar from '@/components/AppBar.vue';
 import ApplicationItem from '@/components/ApplicationItem.vue';
+import { fetchWrapper } from '@/assets/utils';
 
 export default {
     name: 'World',
@@ -54,7 +57,9 @@ export default {
     data() {
         return {
             apps: [],
-            loading: false
+            loading: false,
+            showErrAlert: false,
+            errAlert: ''
         };
     },
     mounted() {
@@ -63,15 +68,16 @@ export default {
     methods: {
         getPublicApps() {
             this.loading = true;
-            fetch('https://ts.lwl.lol/api/stats/apps', { credentials: 'include' })
-                .then(response => response.json())
-                .then(data => {
-                    this.apps = data;
-                    this.loading = false;
-                }).catch(error => {
-                    console.error(error);
-                    this.loading = false;
-                });
+            fetchWrapper('/api/stats/apps', {
+                method: 'GET',
+            }).then((data) => {
+                this.apps = data;
+            }).catch((err) => {
+                this.showErrAlert = true;
+                this.errAlert = 'Something went wrong, please try again later: ' + err;
+            }).finally(() => {
+                this.loading = false;
+            });
         }
     }
 }

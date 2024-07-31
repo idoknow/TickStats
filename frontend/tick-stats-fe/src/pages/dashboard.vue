@@ -23,6 +23,7 @@
 import AppBar from '@/components/AppBar.vue';
 import ApplicationItem from '@/components/ApplicationItem.vue';
 import EmptyApplication from '@/components/EmptyApplication.vue';
+import { fetchWrapper } from '@/assets/utils';
 
 
 export default {
@@ -42,46 +43,20 @@ export default {
     },
     mounted() {
         this.fetchApps();
-        this.apps.push({
-            name: "test",
-            description: "test",
-            emoji: "🚀",
-            app_id: "test",
-            created_time: "test",
-            updated_time: "test",
-        })
-        this.apps.push({
-            name: "test",
-            description: "test",
-            emoji: "😄",
-            app_id: "test",
-            created_time: "test",
-            updated_time: "test",
-        })
     },
     methods: {
         fetchApps() {
             this.loading = true;
-            fetch('https://ts.lwl.lol/api/account/app', { credentials: 'include' })
-                .then(response => response.json())
-                .then(data => {
-                    let apps = []
-                    for (let i = 0; i < data.length; i++) {
-                        apps.push({
-                            name: data[i].name,
-                            description: "",
-                            emoji: data[i].emoji,
-                            app_id: data[i].app_id,
-                            created_time: data[i].created_time,
-                            updated_time: data[i].updated_time,
-                        })
-                    }
-                    this.loading = false;
-                    this.apps = apps;
-                }).catch(error => {
-                    console.error(error);
-                    this.loading = false;
-                });
+            fetchWrapper('/api/account/app', {
+                method: 'GET',
+            }).then((data) => {
+                this.apps = data;
+            }).catch((err) => {
+                this.showErrAlert = true;
+                this.errAlert = 'Something went wrong, please try again later: ' + err;
+            }).finally(() => {
+                this.loading = false;
+            });
         }
     }
 }
