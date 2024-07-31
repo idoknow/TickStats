@@ -1,5 +1,5 @@
 <template>
-    <AppBar />
+    <AppBar nav="1" />
     <div class='index-main'>
         <h1 class="gradient index-title">Worlds' Stats</h1>
         <p style="font-size: 22px; color: #777; margin-bottom:32px">See the public stats.</p>

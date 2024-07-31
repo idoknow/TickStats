@@ -5,31 +5,43 @@
         <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
         </h1>
         <!-- <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn> -->
-        <v-dialog max-width="500">
+        <v-dialog max-width="800">
             <template v-slot:activator="{ props: activatorProps }">
-                <v-btn style="margin: 32px;" v-bind:="activatorProps">Create Chart</v-btn>
+                <v-btn style="margin: 32px;" v-bind:="activatorProps" @click="onCreatingChart = true;">Create
+                    Chart</v-btn>
             </template>
 
             <template v-slot:default="{ isActive }">
                 <v-card title="Create Chart">
 
-                    <v-card-text>
-                        <v-text-field readonly v-model="appId" label="App Id" variant="outlined"></v-text-field>
-                        <v-text-field v-model="newChart.chartName" label="Chart Name" variant="outlined"></v-text-field>
-                        <v-radio-group v-model="newChart.chartType" row>
-                            <v-radio label="Simple Line Chart" value="simple_line"></v-radio>
-                            <v-radio label="Pie Chart" value="simple_pie"></v-radio>
-                        </v-radio-group>
-                        <v-checkbox v-model="newChart.public" label="Public" color="primary"></v-checkbox>
-                        <v-text-field v-model="newChart.keyName" label="Key Name" variant="outlined"></v-text-field>
-                    </v-card-text>
+                    <div class="create-chart-container">
+                        <div style="flex: 1; width: 100%">
+                            <v-card-text>
+                                <v-text-field readonly v-model="appId" label="App Id" variant="outlined"></v-text-field>
+                                <v-text-field v-model="newChart.chart_name" label="Chart Name"
+                                    variant="outlined"></v-text-field>
+                                <v-text-field v-model="newChart.description" label="Description(optional)"
+                                    variant="outlined"></v-text-field>
+                                <v-radio-group v-model="newChart.chart_type" row @change="createChangeChart">
+                                    <v-radio label="Simple Line Chart" value="simple_line"></v-radio>
+                                    <v-radio label="Pie Chart" value="simple_pie"></v-radio>
+                                </v-radio-group>
+                                <v-checkbox v-model="newChart.public" label="Public" color="primary"></v-checkbox>
+                                <v-text-field v-model="newChart.key_name" label="Key Name"
+                                    variant="outlined"></v-text-field>
+                            </v-card-text>
+                        </div>
+
+                        <div id="chart-demo" style="flex:2; margin-top: 16px; width: 100%; height: 300px">
+                        </div>
+                    </div>
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn text @click="createChart(isActive)">
                             Create
                         </v-btn>
-                        <v-btn text="Close" @click="isActive.value = false;"></v-btn>
+                        <v-btn text="Close" @click="isActive.value=false; onCloseCreateChartDialog()">Close</v-btn>
                     </v-card-actions>
                 </v-card>
             </template>
@@ -66,9 +78,11 @@ export default {
             accountName: '',
             appName: '',
             newChart: {
-                chartName: '',
-                keyName: '',
-                chartType: '',
+                appid: '',
+                chart_name: '',
+                key_name: '',
+                description: '',
+                chart_type: '',
                 public: false
             },
             simpleLineChartOptionModel: {
@@ -102,7 +116,7 @@ export default {
                 },
                 padAngle: 5,
                 itemStyle: {
-                    borderRadius: 10
+                    borderRadius: 5
                 },
                 legend: {
                     orient: 'vertical',
@@ -110,7 +124,8 @@ export default {
                     data: []
                 },
             },
-            chartOptions: []
+            chartOptions: [],
+            onCreatingChart: false
         }
     },
     mounted() {
@@ -131,36 +146,93 @@ export default {
             this.toast.show = true;
         },
         createChart(isActive) {
+            this.newChart.appid = this.appId;
             fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    appid: this.appId,
-                    chart_name: this.newChart.chartName,
-                    key_name: this.newChart.keyName,
-                    chart_type: this.newChart.chartType,
-                    public: this.newChart.public
-                })
+                body: JSON.stringify(this.newChart)
             }).then(response => {
                 if (response.ok) {
                     isActive.value = false;
                     this.makeToast('Chart created successfully');
                     this.getCharts();
                     this.newChart = {
-                        chartName: '',
-                        keyName: '',
-                        chartType: '',
-                        public: false
+                        chart_name: '',
+                        key_name: '',
+                        chart_type: '',
+                        public: false,
+                        description: '',
+                        appid: ''
                     };
+                    this.onCreatingChart = false
                 }
             }).catch(error => {
                 console.error(error);
                 this.makeToast('Failed to create chart', 'error');
             });
         },
+        createChangeChart() {
+            console.log(this.newChart.chart_type);
+            this.removeDemoChart()
+            // demo
+            if (this.newChart.chart_type === 'simple_line') {
+                this.updateChart('chart-demo', {
+                    ...this.simpleLineChartOptionModel,
+                    title: {
+                        text: this.newChart.chart_name
+                    },
+                    series: [
+                        {
+                            type: 'line',
+                            data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 100))
+                        }
+                    ],
+                    _chart_type: 'simple_line'
+                });
+            } else if (this.newChart.chart_type === 'simple_pie') {
+                this.updateChart('chart-demo', {
+                    ...this.simplePieChartOptionModel,
+                    title: {
+                        text: this.newChart.chart_name
+                    },
+                    series: [
+                        {
+                            name: this.newChart.chart_name,
+                            type: 'pie',
+                            data: Array.from({ length: 5 }, () => {
+                                return {
+                                    name: Math.random().toString(36).substring(7),
+                                    value: Math.floor(Math.random() * 100)
+                                }
+                            })
+                        }
+                    ],
+                    _chart_type: 'simple_pie'
+                });
+            }
+        },
+        onCloseCreateChartDialog() {
+            console.log('close');
+            this.onCreatingChart = false;
+            this.newChart = {
+                chart_name: '',
+                key_name: '',
+                chart_type: '',
+                public: false,
+                description: '',
+                appid: ''
+            };
+            // remove demo chart
+            this.removeDemoChart();
+        },
+        removeDemoChart() {
+            this.chartInstance['chart-demo'] && this.chartInstance['chart-demo'].dispose();
+            this.chartInstance['chart-demo'] && delete this.chartInstance['chart-demo'];
+        },
+
         getCharts() {
             fetch(`https://ts.lwl.lol/api/account/app/${this.appId}/chart`, {
                 credentials: 'include'
@@ -197,7 +269,7 @@ export default {
                                         })
                                     }
                                 ],
-                                _chartType: 'simple_line'
+                                _chart_type: 'simple_line'
                             });
                         } else if (this.chartData[i].chart_type === 'simple_pie') {
                             this.chartOptions.push({
@@ -217,7 +289,7 @@ export default {
                                         })
                                     }
                                 ],
-                                _chartType: 'simple_pie'
+                                _chart_type: 'simple_pie'
                             });
                         }
                         this.updateChart(this.chartData[i].chart_name, this.chartOptions[this.chartOptions.length - 1]);
@@ -255,7 +327,6 @@ export default {
                 chartDiv.style.height = '350px';
                 chartDiv.style.marginTop = '16px';
                 document.querySelector('.content').appendChild(chartDiv);
-
             }
             let chart = null;
             if (this.chartInstance[divId]) {
@@ -278,22 +349,33 @@ export default {
 }
 
 .content {
-    padding: 32px 128px; 
-    display: flex; 
-    flex-direction: column; 
+    padding: 32px 128px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
 }
+
 .index-title {
-font-size: 64px;
+    font-size: 64px;
 }
-  
+
+.create-chart-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
 
 @media (max-width: 600px) {
     .content {
         padding: 32px 16px;
     }
+
     .index-title {
         font-size: 48px;
+    }
+
+    .create-chart-container {
+        flex-direction: column;
     }
 }
 </style>
