@@ -129,8 +129,9 @@ func (controller *accountController) CreateApplication(c *gin.Context) {
 
 	userId, _ := c.Get("userID")
 	accountId := int(userId.(float64))
+	application.AccountId = accountId
 
-	if err := controller.accountService.CreateApplication(accountId, application.Name); err != nil {
+	if err := controller.accountService.CreateApplication(&application); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}

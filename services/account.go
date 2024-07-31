@@ -9,7 +9,7 @@ import (
 type AccountService interface {
 	Authenticate(email, password string) (*models.Account, error)
 	Register(name, email, password string) error
-	CreateApplication(accountId int, name string) error
+	CreateApplication(application *models.Application) error
 	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
 	CreateChart(appId string, name string, chartType string, keyName string) error
@@ -73,18 +73,13 @@ func (service *accountService) Register(name, email, password string) error {
 	return nil
 }
 
-func (service *accountService) CreateApplication(accountId int, name string) error {
-	// Create a new application
-	application := models.Application{
-		AppId:       utils.GenerateUUID(""),
-		Name:        name,
-		AccountId:   accountId,
-		CreatedTime: utils.CurrentTime(),
-		UpdatedTime: utils.CurrentTime(),
-	}
+func (service *accountService) CreateApplication(application *models.Application) error {
+	application.AppId = utils.GenerateUUID("")
+	application.CreatedTime = utils.CurrentTime()
+	application.UpdatedTime = utils.CurrentTime()
 
 	// Save the application to the database
-	if err := service.applicationRepository.Create(&application); err != nil {
+	if err := service.applicationRepository.Create(application); err != nil {
 		return err
 	}
 
