@@ -42,67 +42,63 @@
 
 </template>
 
-<script setup>
-import { ref } from 'vue';
+<script>
 import EmojiSelector from './EmojiSelector.vue';
 
-var newApp = ref({
-    name: '',
-    public: false,
-    emoji: '🚀',
-});
-
-const toast = ref({
-    show: false,
-    text: '',
-    color: 'primary',
-    timeout: 3000,
-});
-const makeToast = (text, color = 'primary', timeout = 3000) => {
-    toast.value.text = text;
-    toast.value.color = color;
-    toast.value.timeout = timeout;
-    toast.value.show = true;
-};
-
-const createApplication = (isActive) => {
-    fetch('https://ts.lwl.lol/api/account/app/new', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newApp.value)
-    }).then((response) => {
-        if (response.ok) {
-            isActive.value = false;
-            newApp.value = {
-                name: '',
-                public: false,
-                emoji: '🚀',
-            };
-            makeToast('Application created successfully 🎉', 'success');
-            this.$emit('create');
-        } else {
-            makeToast('Failed to create application', 'error');
-        }
-    });
-}
-</script>
-
-<script>
 export default {
     name: 'EmptyApplication',
     data() {
         return {
             rules: {
                 required: value => !!value || 'Required.',
+            },
+            toast: {
+                show: false,
+                text: '',
+                color: 'primary',
+                timeout: 3000,
+            },
+            newApp: {
+                name: '',
+                public: false,
+                emoji: '🚀',
             }
         }
     },
     components: {
         EmojiSelector
     },
+    methods: {
+        makeToast(text, color = 'primary', timeout = 3000) {
+            this.toast.text = text;
+            this.toast.color = color;
+            this.toast.timeout = timeout;
+            this.toast.show = true;
+        },
+        createApplication(isActive) {
+            fetch('https://ts.lwl.lol/api/account/app/new', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(this.newApp)
+            }).then((response) => {
+                if (response.ok) {
+                    isActive.value = false;
+                    this.newApp = {
+                        name: '',
+                        public: false,
+                        emoji: '🚀',
+                    };
+                    this.makeToast('Application created successfully 🎉', 'success');
+                    this.$emit('create');
+                } else {
+                    this.makeToast('Failed to create application', 'error');
+                }
+            });
+        }
+    }
 }
 </script>
 
