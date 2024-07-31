@@ -1,6 +1,7 @@
 <template>
   <AppBar />
   <div class='index-main'>
+    <svg style="margin-bottom: 16px" t="1722403535188" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5323" width="150" height="150"><path d="M42.666667 853.333333h938.666666v85.333334H42.666667zM341.333333 87.466667h85.333334V768h-85.333334zM597.333333 512h85.333334v256h-85.333334zM85.333333 384h85.333334v384H85.333333zM853.333333 256h85.333334v512h-85.333334z" p-id="5324" fill="#2196F3"></path></svg>
     <h1 class="gradient index-title">Tick Stats</h1>
     <p style="font-size: 22px; color: #777">A simple & easy Metric Collector</p>
     <v-btn color="primary" size="x-large" style="margin-top: 24px;" @click="$router.push('/dashboard')">
@@ -109,6 +110,10 @@ export default {
 
   .index-title {
     font-size: 48px;
+  }
+
+  .index-code {
+    display: none;
   }
 }
 

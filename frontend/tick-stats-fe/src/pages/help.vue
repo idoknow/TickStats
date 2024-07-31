@@ -2,51 +2,72 @@
     <AppBar />
     <div class="index-main">
         <h1 class="gradient index-title">How to use?</h1>
-        <h2>Post Data</h2>
-        <p class="text">Post your metric data via <span class="quote">`POST https://mc.lwl.lol/api/metric/:appid`</span> </p>
-        <p class="text">Body should be a JSON object with <span class="quote">`metrics_data`</span> field
-        </p>
-        <p class="text">metrics_data LIMIT (Current version):</p>
-        <ul class="text">
-            <li>1. should be a JSON object</li>
-            <li>2. key should be a string</li>
-            <li>3. value should be a number or JSON object(max depth 2)</li>
-        </ul>
+        <v-timeline side="end">
+            <v-timeline-item dot-color="primary" size="small">
+                <div>
+                    <strong class="me-4">0. Sign in</strong>
+                    <div class="text-caption">
+                        Click the <span class="quote">`Login`</span> button at the top right corner.
+                    </div>
+                </div>
+            </v-timeline-item>
+            <v-timeline-item dot-color="primary" size="small">
+                <div>
+                    <strong class="me-4">1. Create Your Application</strong>
+                    <div class="text-caption">
+                        Create your application at the dashboard page. <a href="/dashboard">Go to Dashboard</a>
+                    </div>
+                </div>
+            </v-timeline-item>
 
-        <p class="text">Example</p>
-        <pre style="font-size: 18px; color: #333; margin-top: 20px">
-{
-    "metrics_data": {
-        "cpu": 0.5,
-        "memory": {
-            "used": 1024,
-            "total": 2048
-        },
-        "os_name": "windows"
-    }
-}
-        </pre>
+            <v-timeline-item dot-color="primary" size="small">
+                <div>
+                    <strong class="me-4">2. Create a new chart</strong>
+                    <div class="text-caption">
+                        Click <span class="quote">`Visit`</span> button at the dashboard page, you will be navigated to
+                        the chart page.
+                    </div>
+                    <div class="text-caption">
+                        Currently, we support 2 types of chart.
+                    </div>
 
-        <h2>Data Format of Chart</h2>
+                </div>
+            </v-timeline-item>
 
-        <p class="text">Currently we support 2 types of chart.</p>
-
-        <ul class="text">
-            <li>1. Simple Line Chart</li>
-            <li>2. Simple Pie Chart</li>
-            <li>3. ... We are developing more types of chart.</li>
-        </ul>
-
-        <p class="text">Every chart should bind a key in the metric data you posted. </p>
-        <h3 style="margin-top: 16px;">Simple Line Chart</h3>
-        <p class="text">The value should be a number</p>
-        <p>Currently, we will aggregate and retrieve numeric data using a 30-minute time bucket. </p>
-        </br>
-        <h3 style="margin-top: 16px;">Simple Pie Chart</h3>
-        <p class="text">The value should be a String</p>
-        <p>Currently we'll count the number of each value in the last 1 hour in the metric data you posted.</p>
-
+            <v-timeline-item dot-color="primary" size="small">
+                <div>
+                    <strong class="me-4">3. Post your metric data</strong>
+                    <div class="text-caption">
+                        Post your metric data via <span class="quote">`POST https://ts.lwl.lol/api/metric/:appid`</span>
+                    </div>
+                    <div class="text-caption">
+                        Body should be a JSON object with <span class="quote">`metrics_data`</span> field. 
+                    </div>
+                    <div class="text-caption">
+                        <span class="quote">`metrics_data`</span> should be a JSON object, and the value should be a number, string or JSON object(max depth 2).
+                    </div>
+                    <v-card style="margin-top: 8px; max-width: 600px; min-height: 200px">
+                        <v-tabs v-model="chartTab" align-tabs="start" color="deep-purple-accent-4">
+                            <v-tab v-for="(chart, index) in charts" :key="index" :value="index">
+                                {{ chart.name }}
+                            </v-tab>
+                        </v-tabs>
+                        <v-tabs-window v-model="chartTab">
+                            <v-tabs-window-item v-for="n in 3" :key="n" :value="n">
+                                <div style="padding: 16px" class="text-caption">
+                                    <p>{{ charts[chartTab].description }}</p>
+                                    <p v-if="charts[chartTab].dataExample != ''">Data Example</p>
+                                    <pre style="color: #333; margin-top: 20px">{{ charts[chartTab].dataExample }}</pre>
+                                </div>
+                            </v-tabs-window-item>
+                        </v-tabs-window>
+                    </v-card>
+                </div>
+            </v-timeline-item>
+        </v-timeline>
     </div>
+
+
 </template>
 
 <script>
@@ -58,6 +79,45 @@ export default {
     },
     data() {
         return {
+            items: [
+                {
+                    id: 1,
+                    color: 'info',
+                    icon: 'mdi-plus',
+                },
+                {
+                    id: 2,
+                    color: 'error',
+                    icon: 'mdi-chart-line',
+                },
+            ],
+            chartTab: 0,
+            charts: [
+                {
+                    name: "Simple Line Chart",
+                    description: "The value should be a number. Currently, we will aggregate and retrieve numeric data using a 30-minute time bucket.",
+                    dataExample: `{
+    "metrics_data": {
+        "usage_cnt": 0.5,
+    }
+}`
+                },
+                {
+                    name: "Simple Pie Chart",
+                    description: "The value should be a String. Currently we'll count the number of each value in the last 1 hour in the metric data you posted.",
+                    dataExample: `{
+    "metrics_data": {
+        "os_name": "windows",
+    }
+}`
+                },
+                {
+                    name: "...",
+                    description: "We will support more types of charts soon.",
+                    dataExample: ""
+                }
+                    
+            ]
         };
     },
     mounted() {
@@ -81,34 +141,33 @@ export default {
 }
 
 .quote {
-    font-size: 17px;
-    color: #333;
+    color: #2196F3;
     background-color: #eeeeee;
-    padding: 4px;
+    padding: 2px;
     border-radius: 4px;
     font-weight: bold;
 }
 
 
 .index-main {
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    padding: 64px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px;
     flex-direction: column;
-  }
-  
-  .index-title {
+}
+
+.index-title {
     font-size: 64px;
-  }
-  
-  @media (max-width: 600px) {
+}
+
+@media (max-width: 600px) {
     .index-main {
-      padding: 32px;
+        padding: 32px;
     }
-  
+
     .index-title {
-      font-size: 48px;
+        font-size: 48px;
     }
-  }
+}
 </style>

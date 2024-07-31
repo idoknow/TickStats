@@ -45,12 +45,15 @@
     </v-app-bar>
 
     <v-navigation-drawer v-if="!isMobile" permanent :rail="menuRail" app>
+        <v-list-item title="Tick Stats" subtitle="Made by Soulter"></v-list-item>
+        <v-divider></v-divider>
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
                 :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
         </v-list>
     </v-navigation-drawer>
     <v-navigation-drawer v-else temporary v-model="mobileDrawer" app>
+        <v-list-item title="Tick Stats" subtitle="Made by Soulter"></v-list-item>
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
                 :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
