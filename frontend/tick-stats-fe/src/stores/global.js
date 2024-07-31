@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 
 export const useGlobalStore = defineStore('global', {
   state: () => ({
-    baseUrl: 'http://localhost:8080',
+    baseUrl: window.location.href.replace(/\/$/, ''),
     account: {
         name: '',
         email: '',
