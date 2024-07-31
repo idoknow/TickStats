@@ -3,8 +3,9 @@
         <template v-slot:activator="{ props: activatorProps }">
             <v-list-item  v-bind:="activatorProps" class="dash-item" border="opacity-50 md"
                 lines="two" max-width="600" rounded="lg" variant="flat">
-                <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; flex-direction:column">
                     <v-icon size="48" color="#777">mdi-plus</v-icon>
+                    <p class="text-caption" style="color: #a3a3a3">Create a new one</p>
                 </div>
             </v-list-item>
         </template>
@@ -107,14 +108,11 @@ export default {
 
 .dash-item {
     cursor: pointer; 
-    margin-bottom: 24px; 
-    min-width:600px
+    margin-bottom: 8px; 
+    min-width:100%;
 }
 
 @media (max-width: 600px) {
-    .dash-item {
-        min-width: 360px;
-    }
 }
 
 </style>

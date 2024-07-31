@@ -9,8 +9,7 @@
         </template>
 
         <template v-slot:append>
-            <v-btn variant="plain" @click="$router.push('/help')">How to use</v-btn>
-            <v-dialog max-width="500" v-if="account.name == ''">
+            <v-dialog v-model="loginDialog" max-width="500" v-if="account.name == ''">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn v-bind:="activatorProps" variant="plain">Login</v-btn>
                 </template>
@@ -19,14 +18,16 @@
                     <v-card :title="AuthTitle[isNewUser]">
 
                         <v-card-text>
-                            <v-text-field v-model="credentials.username" label="Username" variant="outlined"</v-text-field>
-                            <v-text-field v-model="credentials.email" label="Email" variant="outlined"
-                                v-if="isNewUser"></v-text-field>
-                            <v-text-field v-model="credentials.password" label="Password" variant="outlined"
-                                type="password"></v-text-field>
+                            <v-text-field v-model="credentials.username" label="Username" variant="outlined"
+                                </v-text-field>
+                                <v-text-field v-model="credentials.email" label="Email" variant="outlined"
+                                    v-if="isNewUser"></v-text-field>
+                                <v-text-field v-model="credentials.password" label="Password" variant="outlined"
+                                    type="password"></v-text-field>
 
-                            <a style="text-decoration: underline; cursor: pointer" @click="isNewUser = !isNewUser"> {{
-                                AuthHint[isNewUser] }} </a>
+                                <a style="text-decoration: underline; cursor: pointer" @click="isNewUser = !isNewUser">
+                                    {{
+                                        AuthHint[isNewUser] }} </a>
                         </v-card-text>
 
                         <v-card-actions>
@@ -45,18 +46,18 @@
     </v-app-bar>
 
     <v-navigation-drawer v-if="!isMobile" permanent :rail="menuRail" app>
-        <v-list-item title="Tick Stats" subtitle="Made by Soulter"></v-list-item>
         <v-divider></v-divider>
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
-                :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
+                :value="item.value" @click="router(item.value)" :active="nav == item.value" </v-list-item>
+
         </v-list>
     </v-navigation-drawer>
     <v-navigation-drawer v-else temporary v-model="mobileDrawer" app>
-        <v-list-item title="Tick Stats" subtitle="Made by Soulter"></v-list-item>
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
-                :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
+                :value="item.value" @click="router(item.value)" :active="nav == item.value" </v-list-item>
+            <v-divider></v-divider>
         </v-list>
     </v-navigation-drawer>
 
@@ -82,10 +83,6 @@ const credentials = ref({
     email: '',
     password: '',
 });
-const account = ref({
-    name: '',
-    email: '',
-});
 
 const toast = ref({
     show: false,
@@ -98,24 +95,6 @@ const makeToast = (text, color = 'primary', timeout = 3000) => {
     toast.value.color = color;
     toast.value.timeout = timeout;
     toast.value.show = true;
-};
-
-const auth = () => {
-    fetch('https://ts.lwl.lol/api/account/auth', {
-        method: 'GET',
-        credentials: 'include',
-    }).then((response) => {
-        if (response.status === 200) {
-            response.json().then((data) => {
-                account.value.name = data.name;
-                account.value.email = data.email;
-            });
-        } else {
-            makeToast('Not logged in', 'error');
-        }
-    }).catch((err) => {
-        makeToast(err, 'error');
-    });
 };
 
 const login = (isActive) => {
@@ -171,21 +150,27 @@ const login = (isActive) => {
     }
 };
 
-auth();
 </script>
 
 <script>
 export default {
     data() {
         return {
+            loginDialog: false,
             isMobile: false,
             mobileDrawer: false,
             menuRail: false,
             items: [
+                { title: 'Home', icon: 'mdi-home', value: -1 },
                 { title: 'Your Applications', icon: 'mdi-view-dashboard', value: 0 },
                 { title: 'World Stats', icon: 'mdi-chart-bar', value: 1 },
                 { title: 'Settings', icon: 'mdi-cog', value: 2 },
-            ],
+                { title: 'Sign in/up', icon: 'mdi-account', value: 3 },
+            ],  
+            account: {
+                name: '',
+                email: '',
+            }
         };
     },
     props: {
@@ -197,13 +182,36 @@ export default {
     mounted() {
         this.checkScreenWidth();
         window.addEventListener('resize', this.checkScreenWidth);
+        this.auth();
     },
     methods: {
+        auth() {
+            fetch('https://ts.lwl.lol/api/account/auth', {
+                method: 'GET',
+                credentials: 'include',
+            }).then((response) => {
+                if (response.status === 200) {
+                    response.json().then((data) => {
+                        account.name = data.name;
+                        account.email = data.email;
+                    });
+                } else {
+                    // makeToast('Not logged in', 'error');
+                    this.$emit('error', 'You need to login to use this service :)');
+                }
+            }).catch((err) => {
+                // makeToast(err, 'error');
+                this.$emit('error', 'Something went wrong, please try again later: ' + err);
+            });
+        },
         checkScreenWidth() {
             this.isMobile = window.innerWidth <= 768;
         },
         router(value) {
             switch (value) {
+                case -1:
+                    this.$router.push('/');
+                    break;
                 case 0:
                     this.$router.push('/dashboard');
                     break;
@@ -212,6 +220,9 @@ export default {
                     break;
                 case 2:
                     this.$router.push('/settings');
+                    break;
+                case 3:
+                    this.loginDialog = true;
                     break;
             }
         },

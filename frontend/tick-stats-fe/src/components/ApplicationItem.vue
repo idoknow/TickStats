@@ -82,14 +82,7 @@ export default {
 
 .dash-item {
     cursor: pointer; 
-    margin-bottom: 24px; 
-    min-width:600px
-}
-
-@media (max-width: 600px) {
-    .dash-item {
-        min-width: 360px;
-    }
+    min-width:100%;
 }
 
 </style>

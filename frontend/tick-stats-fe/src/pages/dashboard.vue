@@ -1,11 +1,20 @@
 <template>
-    <AppBar nav="0" />
-    <div class="content">
-        <h1 style="text-align: left; margin-bottom: 32px;">Your Apps</h1>
+    <AppBar nav="0" @error="(err) => { showErrAlert = true; errAlert = err; }" />
+    <div class="dash-content">
+        <div style="margin-bottom: 16px;">
+            <h1>Your Apps</h1>
+            <p class="text-caption" style="color: #a3a3a3;">Manage your apps here</p>
+        </div>
+
+        <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px">
+            {{ errAlert }}
+        </v-alert>
+
         <EmptyApplication @create="fetchApps" />
         <ApplicationItem style="margin-top: 16px;" v-for="app in apps" :app="app" :key="app.name" @delete="fetchApps" />
         <v-progress-circular v-if="loading" color="primary" indeterminate></v-progress-circular>
         <p v-if="apps.length == 0 && !loading"> Hmm... You don't have any apps yet. </p>
+
     </div>
 
 </template>
@@ -26,11 +35,29 @@ export default {
     data() {
         return {
             apps: [],
-            loading: false
+            loading: false,
+            showErrAlert: false,
+            errAlert: ''
         };
     },
     mounted() {
         this.fetchApps();
+        this.apps.push({
+            name: "test",
+            description: "test",
+            emoji: "🚀",
+            app_id: "test",
+            created_time: "test",
+            updated_time: "test",
+        })
+        this.apps.push({
+            name: "test",
+            description: "test",
+            emoji: "😄",
+            app_id: "test",
+            created_time: "test",
+            updated_time: "test",
+        })
     },
     methods: {
         fetchApps() {
@@ -62,19 +89,21 @@ export default {
 </script>
 
 <style>
-
-.content {
-    padding: 128px; 
-    display: flex; 
-    flex-direction: column; 
+.dash-content {
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    text-align: center;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 @media (max-width: 600px) {
-    .content {
-        padding: 32px;
-        padding-top: 128px;
+    .dash-content {
+        padding: 16px;
+        padding-top: 32px;
     }
 }
-
 </style>

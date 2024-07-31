@@ -2,8 +2,8 @@
     <AppBar />
     <div class="index-main">
         <h1 class="gradient index-title">How to use?</h1>
-        <v-timeline side="end">
-            <v-timeline-item dot-color="primary" size="small">
+        <v-timeline side="end" style="width: 100%;">
+            <v-timeline-item dot-color="primary" size="small" >
                 <div>
                     <strong class="me-4">0. Sign in</strong>
                     <div class="text-caption">
@@ -11,7 +11,7 @@
                     </div>
                 </div>
             </v-timeline-item>
-            <v-timeline-item dot-color="primary" size="small">
+            <v-timeline-item dot-color="primary" size="small" >
                 <div>
                     <strong class="me-4">1. Create Your Application</strong>
                     <div class="text-caption">
@@ -20,7 +20,7 @@
                 </div>
             </v-timeline-item>
 
-            <v-timeline-item dot-color="primary" size="small">
+            <v-timeline-item dot-color="primary" size="small" >
                 <div>
                     <strong class="me-4">2. Create a new chart</strong>
                     <div class="text-caption">
@@ -34,7 +34,7 @@
                 </div>
             </v-timeline-item>
 
-            <v-timeline-item dot-color="primary" size="small">
+            <v-timeline-item dot-color="primary" size="small" >
                 <div>
                     <strong class="me-4">3. Post your metric data</strong>
                     <div class="text-caption">
@@ -150,7 +150,7 @@ export default {
 
 
 .index-main {
-    display: flex;
+    display:flex;
     align-items: center;
     justify-content: center;
     padding: 64px;
@@ -160,14 +160,14 @@ export default {
 .index-title {
     font-size: 64px;
 }
-
 @media (max-width: 600px) {
     .index-main {
-        padding: 32px;
+        padding: 8px;
     }
 
     .index-title {
-        font-size: 48px;
+        margin: 16px;
+        font-size: 36px;
     }
 }
 </style>
