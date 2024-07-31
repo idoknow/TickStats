@@ -7,7 +7,7 @@ import (
 
 type ChartRepository interface {
 	Create(chart *models.Chart) error
-	FindByAppID(appId string) ([]models.Chart, error)
+	FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error)
 }
 
 type chartRepository struct {
@@ -22,10 +22,19 @@ func (r *chartRepository) Create(chart *models.Chart) error {
 	return r.db.Create(chart).Error
 }
 
-func (r *chartRepository) FindByAppID(appId string) ([]models.Chart, error) {
+func (r *chartRepository) FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error) {
 	var charts []models.Chart
-	if err := r.db.Where("app_id = ?", appId).Find(&charts).Error; err != nil {
+	var err error
+
+	if onlyPublic {
+		err = r.db.Where("app_id = ? AND public = ?", appId, true).Find(&charts).Error
+	} else {
+		err = r.db.Where("app_id = ?", appId).Find(&charts).Error
+	}
+
+	if err != nil {
 		return nil, err
 	}
+
 	return charts, nil
 }

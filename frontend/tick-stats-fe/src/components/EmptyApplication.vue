@@ -11,11 +11,18 @@
 
         <template v-slot:default="{ isActive }">
             <v-card title="Create a application">
-
+                
                 <v-card-text>
-                    <v-text-field v-model="appName" label="App name" outlined></v-text-field>
+                    <emoji-selector style="margin-top: 16px; margin-bottom: 24px;" @select="emoji => newApp.emoji = emoji"></emoji-selector>
+                    <p style="font-size: 52px; text-align:center; margin-bottom: 16px;">{{ newApp.emoji }}</p>
+                    <v-text-field v-model="newApp.name" label="App name" variant="outlined" :rules="[rules.required]"></v-text-field>
+                    <v-checkbox v-model="newApp.public" label="Public" color="primary"></v-checkbox>
+
+                    <small>* Public applications are visible to everyone. You can modify these settings later.</small>
+
                 </v-card-text>
 
+                
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn @click="createApplication(isActive)">
@@ -37,9 +44,13 @@
 
 <script setup>
 import { ref } from 'vue';
+import EmojiSelector from './EmojiSelector.vue';
 
-
-var appName = ref('');
+var newApp = ref({
+    name: '',
+    public: false,
+    emoji: '🚀',
+});
 
 const toast = ref({
     show: false,
@@ -61,19 +72,37 @@ const createApplication = (isActive) => {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            name: appName.value,
-        })
+        body: JSON.stringify(newApp.value)
     }).then((response) => {
         if (response.ok) {
             isActive.value = false;
-            appName.value = '';
-            makeToast('Application created successfully', 'success');
+            newApp.value = {
+                name: '',
+                public: false,
+                emoji: '🚀',
+            };
+            makeToast('Application created successfully 🎉', 'success');
             this.$emit('create');
         } else {
             makeToast('Failed to create application', 'error');
         }
     });
+}
+</script>
+
+<script>
+export default {
+    name: 'EmptyApplication',
+    data() {
+        return {
+            rules: {
+                required: value => !!value || 'Required.',
+            }
+        }
+    },
+    components: {
+        EmojiSelector
+    },
 }
 </script>
 

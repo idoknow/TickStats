@@ -10,6 +10,7 @@ type ApplicationRepository interface {
 	Delete(appId string) error
 	FindByAccountID(accountId int) ([]models.Application, error)
 	FindByAppID(appId string) (*models.Application, error)
+	FindPublicByPage(page, size int) ([]models.Application, error)
 }
 
 type applicationRepository struct {
@@ -42,4 +43,12 @@ func (r *applicationRepository) FindByAppID(appId string) (*models.Application, 
 		return nil, err
 	}
 	return &application, nil
+}
+
+func (r *applicationRepository) FindPublicByPage(page, size int) ([]models.Application, error) {
+	var applications []models.Application
+	if err := r.db.Offset((page-1)*size).Limit(size).Where("public = ?", true).Find(&applications).Error; err != nil {
+		return nil, err
+	}
+	return applications, nil
 }

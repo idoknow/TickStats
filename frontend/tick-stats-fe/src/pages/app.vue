@@ -14,13 +14,14 @@
                 <v-card title="Create Chart">
 
                     <v-card-text>
-                        <v-text-field readonly v-model="appId" label="App Id" outlined></v-text-field>
-                        <v-text-field v-model="newChart.chartName" label="Chart Name" outlined></v-text-field>
+                        <v-text-field readonly v-model="appId" label="App Id" variant="outlined"></v-text-field>
+                        <v-text-field v-model="newChart.chartName" label="Chart Name" variant="outlined"></v-text-field>
                         <v-radio-group v-model="newChart.chartType" row>
                             <v-radio label="Simple Line Chart" value="simple_line"></v-radio>
                             <v-radio label="Pie Chart" value="simple_pie"></v-radio>
                         </v-radio-group>
-                        <v-text-field v-model="newChart.keyName" label="Key Name" outlined></v-text-field>
+                        <v-checkbox v-model="newChart.public" label="Public" color="primary"></v-checkbox>
+                        <v-text-field v-model="newChart.keyName" label="Key Name" variant="outlined"></v-text-field>
                     </v-card-text>
 
                     <v-card-actions>
@@ -68,6 +69,7 @@ export default {
                 chartName: '',
                 keyName: '',
                 chartType: '',
+                public: false
             },
             simpleLineChartOptionModel: {
                 tooltip: {
@@ -139,13 +141,20 @@ export default {
                     appid: this.appId,
                     chart_name: this.newChart.chartName,
                     key_name: this.newChart.keyName,
-                    chart_type: this.newChart.chartType
+                    chart_type: this.newChart.chartType,
+                    public: this.newChart.public
                 })
             }).then(response => {
                 if (response.ok) {
                     isActive.value = false;
                     this.makeToast('Chart created successfully');
                     this.getCharts();
+                    this.newChart = {
+                        chartName: '',
+                        keyName: '',
+                        chartType: '',
+                        public: false
+                    };
                 }
             }).catch(error => {
                 console.error(error);
@@ -274,10 +283,17 @@ export default {
     flex-direction: column; 
     align-items: center;
 }
+.index-title {
+font-size: 64px;
+}
+  
 
 @media (max-width: 600px) {
     .content {
         padding: 32px 16px;
+    }
+    .index-title {
+        font-size: 48px;
     }
 }
 </style>

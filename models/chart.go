@@ -8,6 +8,8 @@ type Chart struct {
 	ChartName   string `json:"chart_name" binding:"required,min=1,max=128"`
 	ChartType   string `json:"chart_type" binding:"required,min=1,max=128"`
 	KeyName     string `json:"key_name" binding:"required,min=1,max=256"`
+	Description string `json:"description" binding:"required,min=1,max=512"`
+	Public      bool   `json:"public" binding:"required"`
 	CreatedTime string `json:"-"`
 	UpdatedTime string `json:"-"`
 }

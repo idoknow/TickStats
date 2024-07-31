@@ -6,6 +6,36 @@
     <v-btn color="primary" size="x-large" style="margin-top: 24px;" @click="$router.push('/dashboard')">
       Get Started
     </v-btn>
+    <div class="code-wrap">
+      <pre class="index-code"><span style="font-weight:bold">POST</span> https://ts.lwl.lol/api/metric/:appid</pre>
+    </div>
+
+    <v-row style="margin-top: 64px; gap: 16px" justify="center">
+      <v-col cols="12" md="6" lg="4">
+        <v-card class="text-center">
+          <v-card-title style="margin-top: 16px;">
+            <v-icon size="64" color="#777">mdi-rocket</v-icon>
+          </v-card-title>
+          <v-card-text> 
+            <h2>Easy to use</h2>
+            <p style="margin-top:16px">Just post your metric data via HTTP API</p>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      <v-col cols="12" md="6" lg="4">
+        <v-card class="text-center">
+          <v-card-title style="margin-top: 16px;">
+            <v-icon size="64" color="#777">mdi-shield-check</v-icon>
+          </v-card-title>
+          <v-card-text>
+            <h2>High reliability</h2>
+            <p style="margin-top:16px">Highly available and reliable service</p>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    
   </div>
 
 </template>
@@ -42,15 +72,33 @@ export default {
 }
 
 .index-main {
+  height: 100%;
   display: flex; 
   align-items: center; 
-  justify-content: center; 
   padding: 64px; 
   flex-direction: column;
 }
 
 .index-title {
   font-size: 64px;
+}
+
+.index-code {
+  font-size: 16px;
+  color: #777;
+}
+
+.code-wrap {
+  margin-top: 24px;
+  background-color: #f1f1f1;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.text-center {
+  text-align: center;
+  min-height: 200px;
+  min-width: 200px;
 }
 
 @media (max-width: 600px) {
@@ -63,6 +111,7 @@ export default {
     font-size: 48px;
   }
 }
+
 
 </style>
 

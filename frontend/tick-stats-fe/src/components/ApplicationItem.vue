@@ -1,21 +1,28 @@
 <template>
     <v-list-item  border="opacity-50 md" lines="two" max-width="600" class="dash-item"
-        prepend-avatar="https://cdn.vuetifyjs.com/docs/images/one/logos/one.png" rounded="lg" variant="flat">
-        <v-list-item-title>
-            <span class="text-h6">{{ app.name }}</span>
-        </v-list-item-title>
+         rounded="lg" variant="flat">
+        
+        <div style="display: flex; align-items: center; gap: 16px">
+            <span style="font-size:32px">{{ app.emoji }}</span>
+            <div>
+                <v-list-item-title>
+                    <span class="text-h6">{{ app.name }}</span>
+                </v-list-item-title>
+        
+                <v-list-item-subtitle :opacity="isDelete ? .8 : undefined">
+                    <v-scroll-y-reverse-transition mode="out-in">
+                        <div v-if="isDelete" key="subscribed" class="text-error text-caption">
+                            Are you sure to delete?
+                        </div>
+        
+                        <div v-else key="not-subscribed" class="text-caption">
+                            {{ app.app_id }}
+                        </div>
+                    </v-scroll-y-reverse-transition>
+                </v-list-item-subtitle>
+            </div>    
+        </div>
 
-        <v-list-item-subtitle :opacity="isDelete ? .8 : undefined">
-            <v-scroll-y-reverse-transition mode="out-in">
-                <div v-if="isDelete" key="subscribed" class="text-error text-caption">
-                    Are you sure to delete?
-                </div>
-
-                <div v-else key="not-subscribed" class="text-caption">
-                    {{ app.app_id }}
-                </div>
-            </v-scroll-y-reverse-transition>
-        </v-list-item-subtitle>
 
         <template v-slot:append>
             <v-fade-transition mode="out-in">

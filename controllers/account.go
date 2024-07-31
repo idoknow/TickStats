@@ -24,11 +24,15 @@ type AccountController interface {
 
 type accountController struct {
 	accountService services.AccountService
+	statsService   services.StatsService
 }
 
-func NewAccountController(accountService services.AccountService) AccountController {
+func NewAccountController(
+	accountService services.AccountService,
+	statsService services.StatsService) AccountController {
 	return &accountController{
 		accountService: accountService,
+		statsService:   statsService,
 	}
 }
 
@@ -197,7 +201,7 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 func (controller *accountController) GetCharts(c *gin.Context) {
 	appId := c.Param("appid")
 
-	charts, err := controller.accountService.GetCharts(appId)
+	charts, err := controller.statsService.GetAppCharts(appId, true)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return

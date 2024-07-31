@@ -1,12 +1,15 @@
 <template>
 
     <v-app-bar color="primary">
-        <v-app-bar-title style="font-weight: 1000; cursor: pointer" @click="$router.push('/')">TickStats</v-app-bar-title>
+        <v-app-bar-title style="font-weight: 1000; cursor: pointer"
+            @click="$router.push('/')">TickStats</v-app-bar-title>
 
+        <template v-slot:prepend>
+            <v-app-bar-nav-icon @click="menuRail = !menuRail; mobileDrawer = !mobileDrawer"></v-app-bar-nav-icon>
+        </template>
 
         <template v-slot:append>
             <v-btn variant="plain" @click="$router.push('/help')">How to use</v-btn>
-            <!-- Login -->
             <v-dialog max-width="500" v-if="account.name == ''">
                 <template v-slot:activator="{ props: activatorProps }">
                     <v-btn v-bind:="activatorProps" variant="plain">Login</v-btn>
@@ -37,10 +40,22 @@
                     </v-card>
                 </template>
             </v-dialog>
-            <span v-else style="margin-right: 16px;"> {{account.name}} </span>
+            <span v-else style="margin-right: 16px;"> {{ account.name }} </span>
         </template>
     </v-app-bar>
 
+    <v-navigation-drawer v-if="!isMobile" permanent :rail="menuRail" app>
+        <v-list nav>
+            <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
+                :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
+        </v-list>
+    </v-navigation-drawer>
+    <v-navigation-drawer v-else temporary v-model="mobileDrawer" app>
+        <v-list nav>
+            <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
+                :value="item.value" @click="router(item.value)" :active="nav == item.value"</v-list-item>
+        </v-list>
+    </v-navigation-drawer>
 
     <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
         {{ toast.text }}
@@ -68,7 +83,6 @@ const account = ref({
     name: '',
     email: '',
 });
-
 
 const toast = ref({
     show: false,
@@ -150,5 +164,50 @@ const login = (isActive) => {
 };
 
 auth();
+</script>
+
+<script>
+export default {
+    data() {
+        return {
+            isMobile: false,
+            mobileDrawer: false,
+            menuRail: false,
+            items: [
+                { title: 'Your Applications', icon: 'mdi-view-dashboard', value: 0 },
+                { title: 'World Stats', icon: 'mdi-chart-bar', value: 1 },
+                { title: 'Settings', icon: 'mdi-cog', value: 2 },
+            ],
+        };
+    },
+    props: {
+        nav: {
+            type: Number,
+            default: -1,
+        },
+    },
+    mounted() {
+        this.checkScreenWidth();
+        window.addEventListener('resize', this.checkScreenWidth);
+    },
+    methods: {
+        checkScreenWidth() {
+            this.isMobile = window.innerWidth <= 768;
+        },
+        router(value) {
+            switch (value) {
+                case 0:
+                    this.$router.push('/dashboard');
+                    break;
+                case 1:
+                    this.$router.push('/world');
+                    break;
+                case 2:
+                    this.$router.push('/settings');
+                    break;
+            }
+        },
+    },
+};
 
 </script>

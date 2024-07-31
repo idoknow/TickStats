@@ -13,7 +13,6 @@ type AccountService interface {
 	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
 	CreateChart(appId string, name string, chartType string, keyName string) error
-	GetCharts(appId string) ([]models.Chart, error)
 	GetAccount(accountId int) (*models.Account, error)
 }
 
@@ -143,36 +142,6 @@ func (service *accountService) CreateChart(appId string, name string, chartType 
 	}
 
 	return nil
-}
-
-func (service *accountService) GetCharts(appId string) ([]models.Chart, error) {
-	// Find the line charts by application ID
-
-	app, err := service.applicationRepository.FindByAppID(appId)
-	if err != nil {
-		return nil, err
-	}
-	if app == nil {
-		return nil, utils.ErrAppNotFound
-	}
-	account, err := service.accountRepository.FindByAccountID(app.AccountId)
-	if err != nil {
-		return nil, err
-	}
-	if account == nil {
-		return nil, utils.ErrAccountNotFound
-	}
-
-	lineCharts, err := service.chartRepository.FindByAppID(appId)
-	if err != nil {
-		return nil, err
-	}
-	for i := range lineCharts {
-		lineCharts[i].AppName = app.Name
-		lineCharts[i].AccountName = account.Name
-	}
-
-	return lineCharts, nil
 }
 
 func (service *accountService) GetAccount(accountId int) (*models.Account, error) {
