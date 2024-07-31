@@ -32,8 +32,13 @@
                             </v-card-text>
                         </div>
 
-                        <div id="chart-demo" style="flex:2; margin-top: 16px; width: 100%; height: 300px">
+                        <div style="flex:2; margin-top:16px" v-if="newChart.chart_type!=''">
+                            <h3>Chart Demo</h3>
+                            <div id="chart-demo" style="width: 100%; height: 300px"></div>
+                            <h3>Data Example</h3>
+                            <pre>{{ pushMetricExample[newChart.chart_type] }}</pre>
                         </div>
+
                     </div>
 
                     <v-card-actions>
@@ -72,7 +77,6 @@ export default {
                 timeout: 3000,
             },
             chartInstance: {},
-            mock_os: ['Windows', 'Linux', 'MacOS'],
             chartData: null,
             appId: '',
             accountName: '',
@@ -125,7 +129,27 @@ export default {
                 },
             },
             chartOptions: [],
-            onCreatingChart: false
+            onCreatingChart: false,
+            mock_os: ['Windows', 'Linux', 'MacOS'],
+            pushMetricExample: {
+                '': '',
+                'simple_line': `
+{
+    "metrics_data": {
+        "used_count": 2,
+        ...
+    }
+}
+                `,
+                'simple_pie': `
+{
+    "metrics_data": {
+        "os_name": "windows",
+        ...
+    }
+}
+                `
+            }
         }
     },
     mounted() {
@@ -202,9 +226,9 @@ export default {
                         {
                             name: this.newChart.chart_name,
                             type: 'pie',
-                            data: Array.from({ length: 5 }, () => {
+                            data: Array.from({ length: 3 }, (_, i) => {
                                 return {
-                                    name: Math.random().toString(36).substring(7),
+                                    name: this.mock_os[i],
                                     value: Math.floor(Math.random() * 100)
                                 }
                             })
@@ -363,6 +387,8 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    overflow-y: scroll;
+    gap:16px
 }
 
 @media (max-width: 600px) {
@@ -376,6 +402,7 @@ export default {
 
     .create-chart-container {
         flex-direction: column;
+        
     }
 }
 </style>
