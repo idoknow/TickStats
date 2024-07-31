@@ -71,7 +71,7 @@ export default {
             })
         },
         visitApplication() {
-            this.$router.push(`/app?id=${this.app.app_id}`)
+            this.$router.push(`/app/${this.app.app_id}`)
         }
     }
 }

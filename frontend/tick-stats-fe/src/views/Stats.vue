@@ -66,7 +66,7 @@ import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel } f
 
 export default {
     components: {
-        AppBar
+        AppBar,
     },
     data() {
         return {
@@ -114,7 +114,7 @@ export default {
         }
     },
     mounted() {
-        this.appId = this.$route.query.id;
+        this.appId = this.$route.params.appid;
         this.getCharts();
 
         window.addEventListener('resize', () => {
@@ -209,7 +209,6 @@ export default {
             this.chartInstance['chart-demo'] && this.chartInstance['chart-demo'].dispose();
             this.chartInstance['chart-demo'] && delete this.chartInstance['chart-demo'];
         },
-
         getCharts() {
             fetchWrapper(`/api/account/app/${this.appId}/chart`, {
                 method: 'GET',
@@ -273,22 +272,6 @@ export default {
             }
 
         },
-        mock() {
-            fetchWrapper(`/api/metric/${this.appId}`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    metrics_data: {
-                        "cnt_usage": Math.floor(Math.random() * 100),
-                        "os_name": this.mock_os[Math.floor(Math.random() * this.mock_os.length)]
-                    }
-                })
-            }).then(() => {
-                this.getMetrics();
-            }).catch((error) => {
-                console.error(error);
-                this.makeToast('Failed to mock data', 'error');
-            });
-        },
         updateChart(divId, option) {
             // create element if not exist
             if (!document.getElementById(divId)) {
@@ -349,7 +332,6 @@ export default {
 
     .create-chart-container {
         flex-direction: column;
-
     }
 }
 </style>

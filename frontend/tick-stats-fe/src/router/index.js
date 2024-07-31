@@ -8,10 +8,23 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router/auto'
 import { routes } from 'vue-router/auto-routes'
+import Stats from '../views/Stats.vue'
+
+// Create the router
+let route_ext = [
+  {
+    path: '/app/:appid',
+    name: 'Stats',
+    component: Stats
+  }
+]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
+  routes: [
+    ...routes,
+    ...route_ext
+  ],
 })
 
 // Workaround for https://github.com/vitejs/vite/issues/11804
