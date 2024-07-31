@@ -19,10 +19,10 @@
                     <v-card :title="AuthTitle[isNewUser]">
 
                         <v-card-text>
-                            <v-text-field v-model="credentials.username" label="Username" outlined></v-text-field>
-                            <v-text-field v-model="credentials.email" label="Email" outlined
+                            <v-text-field v-model="credentials.username" label="Username" variant="outlined"</v-text-field>
+                            <v-text-field v-model="credentials.email" label="Email" variant="outlined"
                                 v-if="isNewUser"></v-text-field>
-                            <v-text-field v-model="credentials.password" label="Password" outlined
+                            <v-text-field v-model="credentials.password" label="Password" variant="outlined"
                                 type="password"></v-text-field>
 
                             <a style="text-decoration: underline; cursor: pointer" @click="isNewUser = !isNewUser"> {{
@@ -132,6 +132,10 @@ const login = (isActive) => {
             if (response.status === 200) {
                 makeToast('Register successful', 'success');
                 isActive.value = false;
+                isNewUser.value = false;
+                credentials.value.email = '';
+                credentials.value.username = '';
+                credentials.value.password = '';
             } else {
                 makeToast('Register failed', 'error');
             }
@@ -153,6 +157,7 @@ const login = (isActive) => {
             if (response.status === 200) {
                 makeToast('Login successful', 'success');
                 isActive.value = false;
+                auth();
             } else {
                 makeToast('Login failed', 'error');
             }
