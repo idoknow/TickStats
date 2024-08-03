@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/soulter/tickstats/models"
 	"github.com/soulter/tickstats/services"
+	"github.com/soulter/tickstats/types"
 )
 
 type MetricsController interface {
@@ -30,7 +31,11 @@ func (controller *metricsController) Add(c *gin.Context) {
 	appId := c.Param("appid")
 
 	if err := c.ShouldBindJSON(&metricInput); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
@@ -43,9 +48,19 @@ func (controller *metricsController) Add(c *gin.Context) {
 	metricData.Value = metricInput.MetricsData
 
 	if err := controller.metricsService.Add(metricData); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "success",
+		Data:    nil,
+	})
 }
 
 func (controller *metricsController) Get(c *gin.Context) {
@@ -56,8 +71,16 @@ func (controller *metricsController) Get(c *gin.Context) {
 
 	metrics, err := controller.metricsService.GetByAppID(appId, chartType, keyName)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
-	c.JSON(200, metrics)
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Get metrics success",
+		Data:    metrics,
+	})
 }

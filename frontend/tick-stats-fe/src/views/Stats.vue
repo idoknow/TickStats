@@ -4,16 +4,46 @@
     <div class="content">
         <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
         </h1>
+
+        <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px; width: 100%;">
+            {{ errAlert }}
+        </v-alert>
+
+        <!-- Tutorial of creating a chart -->
+        <v-card style="width: 100%;" v-if="showCreateChartTutorial">
+            <v-tabs v-model="createChartTab" align-tabs="center" color="deep-purple-accent-4">
+                <v-tab v-for="(chart, index) in availableCharts" :key="index" :value="index"
+                    @click="createChangeChart('chart-demo1', chart.chart_type)">
+                    {{ chart.name }}
+                </v-tab>
+            </v-tabs>
+
+            <v-tabs-window v-model="createChartTab">
+                <v-tabs-window-item v-for="n in 3" :key="n" :value="n">
+                    <div style="display: flex; justify-content: center; margin: 8px; flex-direction: column; align-items: center">
+                        <p class="text-caption">{{ availableCharts[createChartTab].description }}</p>
+                        <v-progress-circular v-if="chartTutorialRendering" color="primary"
+                            indeterminate></v-progress-circular>
+                    </div>
+
+                    <div id="chart-demo1" style="width: 100%; height: 250px; margin-bottom: 16px"></div>
+
+                    <div style="display: flex; justify-content: flex-end; margin: 16px;">
+                        <v-btn variant="plain" @click="onTutorialCreateBtnClicked">Create ></v-btn>
+                    </div>
+                </v-tabs-window-item>
+            </v-tabs-window>
+        </v-card>
+
         <!-- <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn> -->
-        <v-dialog max-width="800">
+        <v-dialog max-width="800" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
-                <v-btn style="margin: 32px;" v-bind:="activatorProps" @click="onCreatingChart = true;">Create
-                    Chart</v-btn>
+                <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
+                    v-bind:="activatorProps"></v-fab>
             </template>
 
             <template v-slot:default="{ isActive }">
                 <v-card title="Create Chart">
-
                     <div class="create-chart-container">
                         <div style="flex: 1; width: 100%">
                             <v-card-text>
@@ -22,7 +52,8 @@
                                     variant="outlined"></v-text-field>
                                 <v-text-field v-model="newChart.description" label="Description(optional)"
                                     variant="outlined"></v-text-field>
-                                <v-radio-group v-model="newChart.chart_type" row @change="createChangeChart">
+                                <v-radio-group v-model="newChart.chart_type" row
+                                    @change="createChangeChart('chart-demo2', newChart.chart_type)">
                                     <v-radio label="Simple Line Chart" value="simple_line"></v-radio>
                                     <v-radio label="Pie Chart" value="simple_pie"></v-radio>
                                 </v-radio-group>
@@ -34,7 +65,7 @@
 
                         <div style="flex:2; margin-top:16px" v-if="newChart.chart_type != ''">
                             <h3>Chart Demo</h3>
-                            <div id="chart-demo" style="width: 100%; height: 300px"></div>
+                            <div id="chart-demo2" style="width: 100%; height: 300px"></div>
                             <h3>Data Example</h3>
                             <pre>{{ pushMetricExample[newChart.chart_type] }}</pre>
                         </div>
@@ -51,6 +82,8 @@
                 </v-card>
             </template>
         </v-dialog>
+
+
     </div>
 
     <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
@@ -63,6 +96,7 @@
 import AppBar from '@/components/AppBar.vue';
 import * as echarts from 'echarts';
 import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel } from '@/assets/utils';
+import { useGlobalStore } from '@/stores/global';
 
 export default {
     components: {
@@ -89,9 +123,35 @@ export default {
                 chart_type: '',
                 public: false
             },
+            createChartTab: 0,
             chartOptions: [],
-            onCreatingChart: false,
             mock_os: ['Windows', 'Linux', 'MacOS'],
+            showErrAlert: false,
+            errAlert: '',
+            showCreateChartTutorial: false,
+            chartTutorialRendering: false,
+            creatChartDialog: false,
+
+            availableCharts: [
+                {
+                    name: "Simple Line Chart",
+                    chart_type: "simple_line",
+                    description: "Record the number of times a certain event occurs in a certain period of time.",
+                    dataExample: ``
+                },
+                {
+                    name: "Simple Pie Chart",
+                    chart_type: "simple_pie",
+                    description: "Record the share of each category in the total in a certain period of time.",
+                    dataExample: ``
+                },
+                {
+                    name: "...",
+                    description: "We will support more types of charts soon.",
+                    dataExample: ""
+                }
+            ],
+
             pushMetricExample: {
                 '': '',
                 'simple_line': `
@@ -110,7 +170,9 @@ export default {
     }
 }
                 `
-            }
+            },
+
+            global: useGlobalStore()
         }
     },
     mounted() {
@@ -147,35 +209,32 @@ export default {
                     description: '',
                     appid: ''
                 };
-                this.onCreatingChart = false
             }).catch((error) => {
                 console.error(error);
                 this.makeToast('Failed to create chart', 'error');
             });
         },
-        createChangeChart() {
-            console.log(this.newChart.chart_type);
-            this.removeDemoChart()
+        createChangeChart(elementId, chartType) {
+            console.log(elementId, chartType);
+            this.removeDemoChart(elementId)
             // demo
-            if (this.newChart.chart_type === 'simple_line') {
-                this.updateChart('chart-demo', {
+            if (chartType === 'simple_line') {
+                this.updateChart(elementId, {
                     ...simpleLineChartOptionModel,
-                    title: {
-                        text: this.newChart.chart_name
-                    },
                     series: [
                         {
                             type: 'line',
                             data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 100))
                         }
                     ],
-                });
-            } else if (this.newChart.chart_type === 'simple_pie') {
-                this.updateChart('chart-demo', {
-                    ...simplePieChartOptionModel,
-                    title: {
-                        text: this.newChart.chart_name
+                    grid: {
+                        top: '16px',
+                        containLabel: true
                     },
+                });
+            } else if (chartType === 'simple_pie') {
+                this.updateChart(elementId, {
+                    ...simplePieChartOptionModel,
                     series: [
                         {
                             name: this.newChart.chart_name,
@@ -193,7 +252,6 @@ export default {
         },
         onCloseCreateChartDialog() {
             console.log('close');
-            this.onCreatingChart = false;
             this.newChart = {
                 chart_name: '',
                 key_name: '',
@@ -205,25 +263,55 @@ export default {
             // remove demo chart
             this.removeDemoChart();
         },
-        removeDemoChart() {
-            this.chartInstance['chart-demo'] && this.chartInstance['chart-demo'].dispose();
-            this.chartInstance['chart-demo'] && delete this.chartInstance['chart-demo'];
+        removeDemoChart(elementId) {
+            this.chartInstance[elementId] && this.chartInstance[elementId].dispose();
+            this.chartInstance[elementId] && delete this.chartInstance[elementId];
         },
         getCharts() {
-            fetchWrapper(`/api/account/app/${this.appId}/chart`, {
+            console.log(this.global.account_apps)
+            let url = `/api/stats/${this.appId}/charts` // only public charts
+            for (let i = 0; i < this.global.account_apps.length; i++) {
+                if (this.global.account_apps[i].app_id === this.appId) {
+                    url = `/api/account/app/${this.appId}/chart` // all charts
+                    break;
+                }
+            }
+
+            fetchWrapper(url, {
                 method: 'GET',
             }).then((data) => {
-                this.chartData = data;
-
+                this.chartData = data.chart;
+                this.accountName = data.account_name;
+                this.appName = data.app_name;
                 if (this.chartData.length > 0) {
-                    this.accountName = this.chartData[0].account_name;
-                    this.appName = this.chartData[0].app_name;
                     this.getMetrics();
+                } else {
+                    // user don't have any charts
+                    this.handleEmptyApp();
                 }
             }).catch((error) => {
                 console.error(error);
-                this.makeToast('Failed to get charts', 'error');
+                this.makeToast('Failed to get charts: ' + error, 'error');
             });
+        },
+        handleEmptyApp() {
+            this.showErrAlert = true;
+            this.errAlert = 'You don\'t have any charts yet, create one now!';
+            this.showCreateChartTutorial = true;
+            this.chartTutorialRendering = true;
+            setTimeout(() => {
+                // wait for the element to be created
+                this.createChangeChart('chart-demo1', this.availableCharts[0].chart_type);
+                this.chartTutorialRendering = false;
+            }, 500);
+        },
+        onTutorialCreateBtnClicked() {
+            let t = this.availableCharts[this.createChartTab].chart_type;
+            this.creatChartDialog = true;
+            this.newChart.chart_type = t;
+            setTimeout(() => {
+                this.createChangeChart('chart-demo2', t);
+            }, 500);
         },
         getMetrics() {
             for (let i = 0; i < this.chartData.length; i++) {
@@ -303,14 +391,18 @@ export default {
 }
 
 .content {
-    padding: 32px 128px;
+    padding: 32px 0px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .index-title {
-    font-size: 64px;
+    font-size: 40px;
+    text-align: center;
 }
 
 .create-chart-container {
@@ -327,7 +419,7 @@ export default {
     }
 
     .index-title {
-        font-size: 48px;
+        font-size: 32px;
     }
 
     .create-chart-container {

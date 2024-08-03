@@ -2,7 +2,7 @@
     <v-list-item  border="opacity-50 md" lines="two" max-width="600" class="dash-item"
          rounded="lg" variant="flat">
         
-        <div style="display: flex; align-items: center; gap: 16px">
+        <div style="display: flex; align-items: center; gap: 16px;">
             <span style="font-size:32px">{{ app.emoji }}</span>
             <div>
                 <v-list-item-title>
@@ -25,7 +25,7 @@
 
 
         <template v-slot:append>
-            <v-fade-transition mode="out-in">
+            <v-fade-transition mode="out-in" v-if="from == 'dashboard'">
                 <v-btn :key="`subscribe-${isDelete}`" :border="`thin ${isDelete ? 'error' : 'success'}`"
                     :color="isDelete ? 'success' : 'error'" :prepend-icon="isDelete ? 'mdi-close' : 'mdi-delete'"
                     :slim="isDelete" :text="isDelete ? 'Cancel' : 'Delete'" :variant="isDelete ? 'plain' : 'tonal'"
@@ -58,6 +58,10 @@ export default {
         app: {
             type: Object,
             required: true
+        },
+        from: {
+            type: String,
+            default: 'world' // world or dashboard
         }
     },
     methods: {
@@ -82,6 +86,7 @@ export default {
 .dash-item {
     cursor: pointer; 
     min-width:100%;
+    margin-bottom: 8px;
 }
 
 </style>

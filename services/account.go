@@ -12,7 +12,7 @@ type AccountService interface {
 	CreateApplication(application *models.Application) error
 	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
-	CreateChart(appId string, name string, chartType string, keyName string) error
+	CreateChart(models.Chart) error
 	GetAccount(accountId int) (*models.Account, error)
 }
 
@@ -119,20 +119,10 @@ func (service *accountService) GetApplications(accountId int) ([]models.Applicat
 	return applications, nil
 }
 
-func (service *accountService) CreateChart(appId string, name string, chartType string, keyName string) error {
-	// Create a new line chart
-	lineChart := models.Chart{
-		ChartId:     utils.GenerateUUID("chart_"),
-		ChartName:   name,
-		ChartType:   chartType,
-		AppId:       appId,
-		KeyName:     keyName,
-		CreatedTime: utils.CurrentTime(),
-		UpdatedTime: utils.CurrentTime(),
-	}
+func (service *accountService) CreateChart(chart models.Chart) error {
 
-	// Save the line chart to the database
-	if err := service.chartRepository.Create(&lineChart); err != nil {
+	// Save the chart to the database
+	if err := service.chartRepository.Create(&chart); err != nil {
 		return err
 	}
 

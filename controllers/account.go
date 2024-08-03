@@ -9,6 +9,7 @@ import (
 	"github.com/soulter/tickstats/config"
 	"github.com/soulter/tickstats/models"
 	"github.com/soulter/tickstats/services"
+	"github.com/soulter/tickstats/types"
 )
 
 type AccountController interface {
@@ -40,27 +41,49 @@ func (controller *accountController) Register(c *gin.Context) {
 	// json
 	var account models.Account
 	if err := c.ShouldBindJSON(&account); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
 	if err := controller.accountService.Register(account.Name, account.Email, account.Password); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Register success",
+		Data:    nil,
+	})
 }
 
 func (controller *accountController) Login(c *gin.Context) {
 
 	var credentials models.Credential
 	if err := c.ShouldBindJSON(&credentials); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
 	account, err := controller.accountService.Authenticate(credentials.Username, credentials.Password)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
@@ -73,7 +96,11 @@ func (controller *accountController) Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(config.JWTSecret)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: "Failed to generate token",
+			Data:    nil,
+		})
 		return
 	}
 
@@ -103,27 +130,54 @@ func (controller *accountController) Login(c *gin.Context) {
 		})
 	}
 
-	// set cookie
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Login success",
+		Data:    nil,
+	})
 }
 
 func (controller *accountController) GetAuth(c *gin.Context) {
 	userId, _ := c.Get("userID")
 	accountId := int(userId.(float64))
 
+	var ret struct {
+		AccountId    int                  `json:"account_id"`
+		Email        string               `json:"email"`
+		Name         string               `json:"name"`
+		Applications []models.Application `json:"apps"`
+	}
+
 	account, err := controller.accountService.GetAccount(accountId)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
-	c.JSON(200, account)
+	ret.AccountId = account.AccountId
+	ret.Email = account.Email
+	ret.Name = account.Name
+	ret.Applications, _ = controller.accountService.GetApplications(accountId)
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Get account success",
+		Data:    ret,
+	})
 }
 
 func (controller *accountController) CreateApplication(c *gin.Context) {
 	var application models.Application
 	if err := c.ShouldBindJSON(&application); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
@@ -132,9 +186,19 @@ func (controller *accountController) CreateApplication(c *gin.Context) {
 	application.AccountId = accountId
 
 	if err := controller.accountService.CreateApplication(&application); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Create application success",
+		Data:    nil,
+	})
 }
 
 func (controller *accountController) DeleteApplication(c *gin.Context) {
@@ -144,9 +208,19 @@ func (controller *accountController) DeleteApplication(c *gin.Context) {
 	accountId := int(userId.(float64))
 
 	if err := controller.accountService.DeleteApplication(accountId, appId); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Delete application success",
+		Data:    nil,
+	})
 }
 
 func (controller *accountController) GetApplications(c *gin.Context) {
@@ -155,11 +229,19 @@ func (controller *accountController) GetApplications(c *gin.Context) {
 
 	applications, err := controller.accountService.GetApplications(accountId)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
-	c.JSON(200, applications)
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Get applications success",
+		Data:    applications,
+	})
 }
 
 func (controller *accountController) CreateChart(c *gin.Context) {
@@ -167,7 +249,11 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 	var chart models.Chart
 
 	if err := c.ShouldBindJSON(&chart); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
@@ -177,7 +263,11 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 
 	applications, err := controller.accountService.GetApplications(accountId)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 	// check if the application exists
@@ -189,24 +279,46 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 		}
 	}
 	if !exists {
-		c.JSON(400, gin.H{"error": "Application does not exist"})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: "Application does not exist",
+			Data:    nil,
+		})
 		return
 	}
 
-	if err := controller.accountService.CreateChart(appId, chart.ChartName, chart.ChartType, chart.KeyName); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	if err := controller.accountService.CreateChart(chart); err != nil {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Create chart success",
+		Data:    nil,
+	})
 }
 
 func (controller *accountController) GetCharts(c *gin.Context) {
 	appId := c.Param("appid")
 
-	charts, err := controller.statsService.GetAppCharts(appId, true)
+	charts, err := controller.statsService.GetAppCharts(appId, false)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
-	c.JSON(200, charts)
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Get charts success",
+		Data:    charts,
+	})
 }

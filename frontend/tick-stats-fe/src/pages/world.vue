@@ -25,6 +25,8 @@
     align-items: center;
     padding: 64px;
     flex-direction: column;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 .index-title {

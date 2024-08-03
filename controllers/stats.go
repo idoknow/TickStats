@@ -24,7 +24,12 @@ func NewStatsController(statsService services.StatsService) StatsController {
 func (controller *statsController) GetPublicApps(c *gin.Context) {
 	var pager types.Pager
 	if err := c.ShouldBindQuery(&pager); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		// c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
@@ -37,11 +42,19 @@ func (controller *statsController) GetPublicApps(c *gin.Context) {
 
 	apps, err := controller.statsService.GetPublicApps(pager.Page, pager.Size)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
-	c.JSON(200, apps)
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "success",
+		Data:    apps,
+	})
 }
 
 func (controller *statsController) GetPublicAppCharts(c *gin.Context) {
@@ -49,9 +62,17 @@ func (controller *statsController) GetPublicAppCharts(c *gin.Context) {
 
 	charts, err := controller.statsService.GetAppCharts(appID, true)
 	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
 		return
 	}
 
-	c.JSON(200, charts)
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "success",
+		Data:    charts,
+	})
 }

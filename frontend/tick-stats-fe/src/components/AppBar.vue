@@ -181,7 +181,9 @@ export default {
                     account: {
                         name: data.name,
                         email: data.email,
-                    }
+                        id: data.id
+                    },
+                    account_apps: data.apps
                 })
             }).catch((err) => {
                 this.$emit('error', 'Something went wrong, please try again later: ' + err);

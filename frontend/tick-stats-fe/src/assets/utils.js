@@ -7,6 +7,8 @@ export const fetchWrapper = async (url, options = {}) => {
         url = globalStore.baseUrl + url;
     }
 
+    console.log(url)
+
     return fetch(url, {
         credentials: 'include',
         headers: {
@@ -17,10 +19,11 @@ export const fetchWrapper = async (url, options = {}) => {
     }).then(async response => {
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.message || 'Something went wrong');
+            throw new Error(error.error || 'Something went wrong');
         }
 
-        return await response.json();
+        let resp = await response.json();
+        return resp.data;
     }).catch(error => {
         console.error('Fetch error:', error);
         throw error;

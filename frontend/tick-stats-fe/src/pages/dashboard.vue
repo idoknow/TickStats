@@ -11,7 +11,7 @@
         </v-alert>
 
         <EmptyApplication @create="fetchApps" />
-        <ApplicationItem style="margin-top: 16px;" v-for="app in apps" :app="app" :key="app.name" @delete="fetchApps" />
+        <ApplicationItem style="margin-top: 8px;" v-for="app in apps" :app="app" :key="app.name" from="dashboard" @delete="fetchApps" />
         <v-progress-circular v-if="loading" color="primary" indeterminate></v-progress-circular>
         <p v-if="apps.length == 0 && !loading"> Hmm... You don't have any apps yet. </p>
 
@@ -24,6 +24,7 @@ import AppBar from '@/components/AppBar.vue';
 import ApplicationItem from '@/components/ApplicationItem.vue';
 import EmptyApplication from '@/components/EmptyApplication.vue';
 import { fetchWrapper } from '@/assets/utils';
+import { useGlobalStore } from '@/stores/global';
 
 
 export default {
@@ -38,7 +39,8 @@ export default {
             apps: [],
             loading: false,
             showErrAlert: false,
-            errAlert: ''
+            errAlert: '',
+            global: useGlobalStore()
         };
     },
     mounted() {
@@ -51,6 +53,9 @@ export default {
                 method: 'GET',
             }).then((data) => {
                 this.apps = data;
+                this.global.updateState({
+                    account_apps: data
+                });
             }).catch((err) => {
                 this.showErrAlert = true;
                 this.errAlert = 'Something went wrong, please try again later: ' + err;

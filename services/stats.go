@@ -3,12 +3,13 @@ package services
 import (
 	"github.com/soulter/tickstats/models"
 	"github.com/soulter/tickstats/repositories"
+	"github.com/soulter/tickstats/types"
 	"github.com/soulter/tickstats/utils"
 )
 
 type StatsService interface {
 	GetPublicApps(page, size int) ([]models.Application, error)
-	GetAppCharts(appId string, onlyPublic bool) ([]models.Chart, error)
+	GetAppCharts(appId string, onlyPublic bool) (*types.ChartResponse, error)
 }
 
 type statsService struct {
@@ -33,7 +34,8 @@ func (service *statsService) GetPublicApps(page, size int) ([]models.Application
 	return service.applicationRepository.FindPublicByPage(page, size)
 }
 
-func (service *statsService) GetAppCharts(appId string, onlyPublic bool) ([]models.Chart, error) {
+func (service *statsService) GetAppCharts(appId string, onlyPublic bool) (*types.ChartResponse, error) {
+	var chartResponse types.ChartResponse
 
 	app, err := service.applicationRepository.FindByAppID(appId)
 	if err != nil {
@@ -54,10 +56,9 @@ func (service *statsService) GetAppCharts(appId string, onlyPublic bool) ([]mode
 	if err != nil {
 		return nil, err
 	}
-	for i := range lineCharts {
-		lineCharts[i].AppName = app.Name
-		lineCharts[i].AccountName = account.Name
-	}
+	chartResponse.Chart = lineCharts
+	chartResponse.AppName = app.Name
+	chartResponse.AccountName = account.Name
 
-	return lineCharts, nil
+	return &chartResponse, nil
 }

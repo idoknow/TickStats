@@ -26,6 +26,8 @@ func (r *metricsRepository) Add(metric *models.BasicMetricData) error {
 }
 
 func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]models.BasicMetricOutput, error) {
+	var err error
+
 	query := `
 		SELECT time_bucket('30 minutes', time) as k,
 		SUM((value->>?)::numeric) as v
@@ -36,15 +38,15 @@ func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]m
 		ORDER BY k
 		LIMIT 1440;
 	`
-	var metrics []models.BasicMetricOutput
-	if err := r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error; err != nil {
-		return nil, err
-	}
+	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
+	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error
 	fmt.Println(metrics)
-	return metrics, nil
+	return metrics, err
 }
 
 func (r *metricsRepository) GetPlainStringVal(appId string, keyName string) ([]models.BasicMetricOutput, error) {
+	var err error
+
 	query := `
 		SELECT value->>? as k, 
 		COUNT(*) as v
@@ -54,9 +56,7 @@ func (r *metricsRepository) GetPlainStringVal(appId string, keyName string) ([]m
 		AND time > NOW() - INTERVAL '1 hour'
 		GROUP BY k
 	`
-	var metrics []models.BasicMetricOutput
-	if err := r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error; err != nil {
-		return nil, err
-	}
-	return metrics, nil
+	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
+	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error
+	return metrics, err
 }
