@@ -127,7 +127,7 @@ const login = async (isActive) => {
         }).then(() => {
             makeToast('Login successful', 'success');
             isActive.value = false;
-            auth();
+            this.auth();
         }).catch((err) => {
             makeToast(err, 'error');
         });

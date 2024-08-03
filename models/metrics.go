@@ -46,7 +46,7 @@ type BasicMetricOutput struct {
 
 // output
 // type NumberMetricOutput struct {
-// 	Bucket time.Time `json:"time"`
+// 	Timez time.Time `json:"time"`
 // 	Value  float64   `json:"value"`
 // }
 

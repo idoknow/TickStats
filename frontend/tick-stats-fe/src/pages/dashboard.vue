@@ -58,7 +58,11 @@ export default {
                 });
             }).catch((err) => {
                 this.showErrAlert = true;
-                this.errAlert = 'Something went wrong, please try again later: ' + err;
+                if (err.status === 401) {
+                    this.errAlert = 'You need to sign in to view your apps.';
+                } else {
+                    this.errAlert = 'Something went wrong, please try again later: ' + err;
+                }
             }).finally(() => {
                 this.loading = false;
             });

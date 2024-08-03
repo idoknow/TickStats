@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/soulter/tickstats/models"
 	"gorm.io/gorm"
@@ -27,6 +27,12 @@ func (r *metricsRepository) Add(metric *models.BasicMetricData) error {
 
 func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]models.BasicMetricOutput, error) {
 	var err error
+	type TimeMetrics struct {
+		Time  time.Time `json:"k" gorm:"column:k"`
+		Value float64   `json:"v" gorm:"column:v"`
+	}
+	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
+	var metrics_ []TimeMetrics = []TimeMetrics{}
 
 	query := `
 		SELECT time_bucket('30 minutes', time) as k,
@@ -38,9 +44,16 @@ func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]m
 		ORDER BY k
 		LIMIT 1440;
 	`
-	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
-	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error
-	fmt.Println(metrics)
+
+	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
+
+	for _, metric := range metrics_ {
+		metrics = append(metrics, models.BasicMetricOutput{
+			Key:   metric.Time.UnixMilli(),
+			Value: metric.Value,
+		})
+	}
+
 	return metrics, err
 }
 

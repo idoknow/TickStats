@@ -76,7 +76,7 @@ export default {
                 this.apps = data;
             }).catch((err) => {
                 this.showErrAlert = true;
-                this.errAlert = 'Something went wrong, please try again later: ' + err;
+                this.errAlert = 'Something went wrong, please try again later: ';
             }).finally(() => {
                 this.loading = false;
             });

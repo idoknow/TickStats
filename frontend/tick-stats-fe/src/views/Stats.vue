@@ -9,6 +9,8 @@
             {{ errAlert }}
         </v-alert>
 
+        <v-btn @click="mockData" variant="plain" v-if="devMode">DEBUG: MOCK RANDOM DATA</v-btn>
+
         <!-- Tutorial of creating a chart -->
         <v-card style="width: 100%;" v-if="showCreateChartTutorial">
             <v-tabs v-model="createChartTab" align-tabs="center" color="deep-purple-accent-4">
@@ -95,7 +97,7 @@
 <script>
 import AppBar from '@/components/AppBar.vue';
 import * as echarts from 'echarts';
-import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel } from '@/assets/utils';
+import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel, generateTimeDemoData, fillingTimeData } from '@/assets/utils';
 import { useGlobalStore } from '@/stores/global';
 
 export default {
@@ -172,7 +174,8 @@ export default {
                 `
             },
 
-            global: useGlobalStore()
+            global: useGlobalStore(),
+            devMode: false
         }
     },
     mounted() {
@@ -184,8 +187,28 @@ export default {
                 this.chartInstance[key].resize();
             }
         });
+
+        if (this.$route.query.dev === 'true') this.devMode = true;
     },
     methods: {
+        mockData() {
+            fetchWrapper(`/api/metric/${this.appId}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    metrics_data: {
+                        used_count: Math.floor(Math.random() * 100),
+                        os_name: this.mock_os[Math.floor(Math.random() * 3)]
+                    }
+                })
+            }).then(() => {
+                this.makeToast('Mock data posted successfully');
+                this.getCharts();
+            }).catch((error) => {
+                console.error(error);
+                this.makeToast('Failed to post mock data', 'error');
+            });
+        },
+
         makeToast(text, color = 'primary', timeout = 3000) {
             this.toast.text = text;
             this.toast.color = color;
@@ -200,6 +223,7 @@ export default {
             }).then(() => {
                 isActive.value = false;
                 this.makeToast('Chart created successfully');
+                this.showCreateChartTutorial = false;
                 this.getCharts();
                 this.newChart = {
                     chart_name: '',
@@ -223,8 +247,9 @@ export default {
                     ...simpleLineChartOptionModel,
                     series: [
                         {
+                            showSymbol: false,
                             type: 'line',
-                            data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 100))
+                            data: generateTimeDemoData()
                         }
                     ],
                     grid: {
@@ -326,10 +351,9 @@ export default {
                             },
                             series: [
                                 {
+                                    showSymbol: false,
                                     type: 'line',
-                                    data: data.map((item) => {
-                                        return [item.k, item.v];
-                                    })
+                                    data: fillingTimeData(data)
                                 }
                             ],
                         });
@@ -396,7 +420,7 @@ export default {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 600px;
+    max-width: 900px;
     margin: 0 auto;
 }
 

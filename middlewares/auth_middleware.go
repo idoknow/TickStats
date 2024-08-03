@@ -13,18 +13,22 @@ import (
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		tokenString := ""
 		if authHeader == "" {
 			// 从Cookie中获取
 			authHeader = c.GetHeader("Cookie")
 			if authHeader == "" {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Not Authorized"})
 				c.Abort()
 				return
 			}
-		}
-		tokenString := ""
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			tokenString = strings.Split(authHeader, "=")[1]
+			cookie := strings.Split(authHeader, ";")
+			for _, v := range cookie {
+				if strings.Contains(v, "token=") {
+					tokenString = strings.Split(v, "=")[1]
+					break
+				}
+			}
 		} else {
 			tokenString = strings.Split(authHeader, "Bearer ")[1]
 		}
