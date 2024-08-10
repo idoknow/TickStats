@@ -14,16 +14,16 @@
         <!-- Tutorial of creating a chart -->
         <v-card style="width: 100%;" v-if="showCreateChartTutorial">
             <v-tabs v-model="createChartTab" align-tabs="center" color="deep-purple-accent-4">
-                <v-tab v-for="(chart, index) in availableCharts" :key="index" :value="index"
+                <v-tab v-for="(chart, index) in chartsPresetConfigs" :key="index" :value="index"
                     @click="createChangeChart('chart-demo1', chart.chart_type)">
-                    {{ chart.name }}
+                    {{ chart.title }}
                 </v-tab>
             </v-tabs>
 
             <v-tabs-window v-model="createChartTab">
                 <v-tabs-window-item v-for="n in 3" :key="n" :value="n">
                     <div style="display: flex; justify-content: center; margin: 8px; flex-direction: column; align-items: center">
-                        <p class="text-caption">{{ availableCharts[createChartTab].description }}</p>
+                        <p class="text-caption">{{ chartsPresetConfigs[createChartTab].description }}</p>
                         <v-progress-circular v-if="chartTutorialRendering" color="primary"
                             indeterminate></v-progress-circular>
                     </div>
@@ -56,9 +56,26 @@
                                     variant="outlined"></v-text-field>
                                 <v-radio-group v-model="newChart.chart_type" row
                                     @change="createChangeChart('chart-demo2', newChart.chart_type)">
-                                    <v-radio label="Simple Line Chart" value="simple_line"></v-radio>
-                                    <v-radio label="Pie Chart" value="simple_pie"></v-radio>
+                                    <v-radio v-for="(chart, index) in chartsPresetConfigs" :key="index" :label="chart.title"
+                                        :value="chart.chart_type"></v-radio>
                                 </v-radio-group>
+
+                                <!-- extra options -->
+                                 <div v-for="(ops, index) in selectedChartConfig.extra_configs" :key="index">
+                                    <div v-if="ops.type === 'bool'">
+                                        <small>{{ops.description}}</small>
+                                        <v-checkbox v-model="newChart.extra_configs[ops.name]" :label="ops.name" :value="ops.default"
+                                            color="primary">
+                                        </v-checkbox>
+                                    </div>
+                                    <div v-else-if="ops.type === 'selectable'">
+                                        <small>{{ops.description}}</small>
+                                        <v-select v-model="newChart.extra_configs[ops.name]" :items="ops.options"
+                                        :value="ops.default" :label="ops.name" variant="outlined">
+                                        </v-select>
+                                    </div>
+                                </div>
+
                                 <v-checkbox v-model="newChart.public" label="Public" color="primary"></v-checkbox>
                                 <v-text-field v-model="newChart.key_name" label="Key Name"
                                     variant="outlined"></v-text-field>
@@ -69,7 +86,7 @@
                             <h3>Chart Demo</h3>
                             <div id="chart-demo2" style="width: 100%; height: 300px"></div>
                             <h3>Data Example</h3>
-                            <pre>{{ pushMetricExample[newChart.chart_type] }}</pre>
+                            <pre>{{ metricPushExample }}</pre>
                         </div>
 
                     </div>
@@ -97,12 +114,36 @@
 <script>
 import AppBar from '@/components/AppBar.vue';
 import * as echarts from 'echarts';
-import { fetchWrapper, simpleLineChartOptionModel, simplePieChartOptionModel, generateTimeDemoData, fillingTimeData } from '@/assets/utils';
+import { fetchWrapper, fillingTimeData, chartsPresetConfigs } from '@/assets/utils';
 import { useGlobalStore } from '@/stores/global';
 
 export default {
     components: {
         AppBar,
+    },
+    computed: {
+        metricPushExample() {
+            // for creating a new chart
+            if (this.newChart.chart_type === '') return '';
+            for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
+                if (this.chartsPresetConfigs[i].chart_type === this.newChart.chart_type) {
+                    return this.chartsPresetConfigs[i].metric_example;
+                }
+            }
+            return '';
+        },
+        selectedChartConfig() {
+            // for creating a new chart
+            for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
+                if (this.chartsPresetConfigs[i].chart_type === this.newChart.chart_type) {
+                    return this.chartsPresetConfigs[i];
+                }
+            }
+            return {
+                demo_data: [],
+                extra_configs: []
+            };
+        }
     },
     data() {
         return {
@@ -123,7 +164,8 @@ export default {
                 key_name: '',
                 description: '',
                 chart_type: '',
-                public: false
+                public: false,
+                extra_configs: {}
             },
             createChartTab: 0,
             chartOptions: [],
@@ -133,49 +175,9 @@ export default {
             showCreateChartTutorial: false,
             chartTutorialRendering: false,
             creatChartDialog: false,
-
-            availableCharts: [
-                {
-                    name: "Simple Line Chart",
-                    chart_type: "simple_line",
-                    description: "Record the number of times a certain event occurs in a certain period of time.",
-                    dataExample: ``
-                },
-                {
-                    name: "Simple Pie Chart",
-                    chart_type: "simple_pie",
-                    description: "Record the share of each category in the total in a certain period of time.",
-                    dataExample: ``
-                },
-                {
-                    name: "...",
-                    description: "We will support more types of charts soon.",
-                    dataExample: ""
-                }
-            ],
-
-            pushMetricExample: {
-                '': '',
-                'simple_line': `
-{
-    "metrics_data": {
-        "used_count": 2,
-        ...
-    }
-}
-                `,
-                'simple_pie': `
-{
-    "metrics_data": {
-        "os_name": "windows",
-        ...
-    }
-}
-                `
-            },
-
             global: useGlobalStore(),
-            devMode: false
+            devMode: false,
+            chartsPresetConfigs: chartsPresetConfigs
         }
     },
     mounted() {
@@ -209,6 +211,15 @@ export default {
             });
         },
 
+        getChartConfig(chartType) {
+            for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
+                if (this.chartsPresetConfigs[i].chart_type === chartType) {
+                    return this.chartsPresetConfigs[i];
+                }
+            }
+            return null;
+        },
+
         makeToast(text, color = 'primary', timeout = 3000) {
             this.toast.text = text;
             this.toast.color = color;
@@ -231,7 +242,8 @@ export default {
                     chart_type: '',
                     public: false,
                     description: '',
-                    appid: ''
+                    appid: '',
+                    extra_configs: {}
                 };
             }).catch((error) => {
                 console.error(error);
@@ -244,12 +256,12 @@ export default {
             // demo
             if (chartType === 'simple_line') {
                 this.updateChart(elementId, {
-                    ...simpleLineChartOptionModel,
+                    ...this.selectedChartConfig.option_model,
                     series: [
                         {
                             showSymbol: false,
                             type: 'line',
-                            data: generateTimeDemoData()
+                            data: this.selectedChartConfig.demo_data
                         }
                     ],
                     grid: {
@@ -259,17 +271,12 @@ export default {
                 });
             } else if (chartType === 'simple_pie') {
                 this.updateChart(elementId, {
-                    ...simplePieChartOptionModel,
+                    ...this.selectedChartConfig.option_model,
                     series: [
                         {
                             name: this.newChart.chart_name,
                             type: 'pie',
-                            data: Array.from({ length: 3 }, (_, i) => {
-                                return {
-                                    name: this.mock_os[i],
-                                    value: Math.floor(Math.random() * 100)
-                                }
-                            })
+                            data: this.selectedChartConfig.demo_data
                         }
                     ],
                 });
@@ -326,12 +333,12 @@ export default {
             this.chartTutorialRendering = true;
             setTimeout(() => {
                 // wait for the element to be created
-                this.createChangeChart('chart-demo1', this.availableCharts[0].chart_type);
+                this.createChangeChart('chart-demo1', this.chartsPresetConfigs[0].chart_type);
                 this.chartTutorialRendering = false;
             }, 500);
         },
         onTutorialCreateBtnClicked() {
-            let t = this.availableCharts[this.createChartTab].chart_type;
+            let t = this.chartsPresetConfigs[this.createChartTab].chart_type;
             this.creatChartDialog = true;
             this.newChart.chart_type = t;
             setTimeout(() => {
@@ -345,7 +352,7 @@ export default {
                 }).then((data) => {
                     if (this.chartData[i].chart_type === 'simple_line') {
                         this.updateChart(this.chartData[i].chart_name, {
-                            ...simpleLineChartOptionModel,
+                            ...this.getChartConfig('simple_line').option_model,
                             title: {
                                 text: this.chartData[i].chart_name
                             },
@@ -359,7 +366,7 @@ export default {
                         });
                     } else if (this.chartData[i].chart_type === 'simple_pie') {
                         this.updateChart(this.chartData[i].chart_name, {
-                            ...simplePieChartOptionModel,
+                            ...this.getChartConfig('simple_pie').option_model,
                             title: {
                                 text: this.chartData[i].chart_name
                             },

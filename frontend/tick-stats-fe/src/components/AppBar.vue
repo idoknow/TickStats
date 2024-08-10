@@ -36,7 +36,7 @@
                                 {{ AuthTitle[isNewUser] }}
                             </v-btn>
                             <v-btn text="Close"
-                                @click="credentials.username = ''; credentials.password = ''; isActive.value = false;"></v-btn>
+                                @click="credentials.username = ''; credentials.password = ''; isActive = false;"></v-btn>
                         </v-card-actions>
                     </v-card>
                 </template>
@@ -66,80 +66,9 @@
     </v-snackbar>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import { fetchWrapper } from '@/assets/utils';
-
-const AuthTitle = ref({
-    true: 'Sign up',
-    false: 'Login',
-})
-const AuthHint = ref({
-    true: 'Already have an account?',
-    false: 'Don\'t have an account?',
-})
-const isNewUser = ref(false);
-const credentials = ref({
-    username: '',
-    email: '',
-    password: '',
-});
-
-const toast = ref({
-    show: false,
-    text: '',
-    color: 'primary',
-    timeout: 3000,
-});
-const makeToast = (text, color = 'primary', timeout = 3000) => {
-    toast.value.text = text;
-    toast.value.color = color;
-    toast.value.timeout = timeout;
-    toast.value.show = true;
-};
-
-const login = async (isActive) => {
-    if (isNewUser.value) {
-        fetchWrapper('/api/account/register', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: credentials.value.username,
-                email: credentials.value.email,
-                password: credentials.value.password,
-            }),
-        }).then(() => {
-            makeToast('Register successful', 'success');
-            isActive.value = false;
-            isNewUser.value = false;
-            credentials.value.email = '';
-            credentials.value.username = '';
-            credentials.value.password = '';
-        }).catch((err) => {
-            makeToast(err, 'error');
-        });
-    } else {
-        fetchWrapper('/api/account/login', {
-            method: 'POST',
-            body: JSON.stringify({
-                username: credentials.value.username,
-                password: credentials.value.password,
-            }),
-        }).then(() => {
-            makeToast('Login successful', 'success');
-            isActive.value = false;
-            this.auth();
-        }).catch((err) => {
-            makeToast(err, 'error');
-        });
-    }
-};
-
-</script>
-
 <script>
 import { fetchWrapper } from '@/assets/utils';
 import { useGlobalStore } from '@/stores/global';
-
 
 export default {
     data() {
@@ -155,6 +84,27 @@ export default {
                 { title: 'Settings', icon: 'mdi-cog', value: 2 },
                 { title: 'Sign in/up', icon: 'mdi-account', value: 3 },
             ],
+            AuthTitle: {
+                true: 'Sign up',
+                false: 'Login',
+            },
+            AuthHint: {
+                true: 'Already have an account?',
+                false: 'Don\'t have an account?',
+            },
+            isNewUser: false,
+            credentials: {
+                username: '',
+                email: '',
+                password: '',
+            },
+
+            toast: {
+                show: false,
+                text: '',
+                color: 'primary',
+                timeout: 3000,
+            },
             global: useGlobalStore(),
         };
     },
@@ -173,6 +123,47 @@ export default {
         }
     },
     methods: {
+        makeToast(text, color = 'primary', timeout = 3000) {
+            this.toast.text = text;
+            this.toast.color = color;
+            this.toast.timeout = timeout;
+            this.toast.show = true;
+        },
+        login(isActive) {
+            if (this.isNewUser) {
+                fetchWrapper('/api/account/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: this.credentials.username,
+                        email: this.credentials.email,
+                        password: this.credentials.password,
+                    }),
+                }).then(() => {
+                    this.makeToast('Register successful', 'success');
+                    isActive = false;
+                    this.isNewUser = false;
+                    this.credentials.email = '';
+                    this.credentials.username = '';
+                    this.credentials.password = '';
+                }).catch((err) => {
+                    this.makeToast(err, 'error');
+                });
+            } else {
+                fetchWrapper('/api/account/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username: this.credentials.username,
+                        password: this.credentials.password,
+                    }),
+                }).then(() => {
+                    this.makeToast('Login successful', 'success');
+                    isActive = false;
+                    this.auth();
+                }).catch((err) => {
+                    this.makeToast(err, 'error');
+                });
+            }
+        },
         auth() {
             fetchWrapper('/api/account/auth', {
                 method: 'GET',

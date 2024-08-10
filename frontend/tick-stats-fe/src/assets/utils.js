@@ -7,8 +7,6 @@ export const fetchWrapper = async (url, options = {}) => {
         url = globalStore.baseUrl + url;
     }
 
-    console.log(url)
-
     return fetch(url, {
         credentials: 'include',
         headers: {
@@ -79,12 +77,20 @@ export const generateTimeDemoData = (count = 1496) => {
             Math.random() * 100
         ]);
     }
-    console.log(data);
     return data;
 }
 
+export const generatePieDemoData = () => {
+    let mock_os = ['Windows', 'Linux', 'MacOS']
+    return Array.from({ length: 3 }, (_, i) => {
+        return {
+            name: mock_os[i],
+            value: Math.floor(Math.random() * 100)
+        }
+    })
+}
+
 export const fillingTimeData = (items, count = 1496, interval_mins = 30) => {
-    console.log(items);
     let arr = items.map((item) => {
         return [item.k, item.v];
     })
@@ -101,8 +107,6 @@ export const fillingTimeData = (items, count = 1496, interval_mins = 30) => {
     }
     nearest = nearest.getTime();
 
-    console.log(nearest);
-
     let interval = interval_mins * 60 * 1000;
     for (let i = 0; i < count; i++) {
         let time = nearest - i * interval
@@ -115,11 +119,53 @@ export const fillingTimeData = (items, count = 1496, interval_mins = 30) => {
             data.push([time, 0]);
         }
     }
-
-    console.log(data);
-
     return data;
 }
 
+export const chartsPresetConfigs = [
+    {
+        title: 'Simple Line Chart',
+        chart_type: 'simple_line',
+        option_model: simpleLineChartOptionModel,
+        demo_data: generateTimeDemoData(),
+        description: 'A simple line chart with time x-axis and value y-axis.',
+        metric_example: `{
+    "metrics_data": {
+        "used_count": 2,
+        ...
+    }
+}`,
+        extra_configs: [
+            {
+                name: "distinct_ip",
+                type: "bool",
+                default: false,
+                description: "Count distinct IP addresses."
+            },
+            {
+                name: "method",
+                type: "selectable",
+                default: "sum",
+                options: ["sum", "count", "accumulate"],
+                description: "The method to aggregate the data points."
+            }
+        ]
+    },
+    {
+        title: 'Simple Pie Chart',
+        chart_type: 'simple_pie',
+        option_model: simplePieChartOptionModel,
+        demo_data: generatePieDemoData(),
+        description: 'A simple pie chart with data in name-value format.',
+        metric_example: `{
+    "metrics_data": {
+        "os_name": "windows",
+        ...
+    }
+}`,
+        extra_configs: []
+    },
+
+]
 
 
