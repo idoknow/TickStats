@@ -64,14 +64,14 @@
                                  <div v-for="(ops, index) in selectedChartConfig.extra_configs" :key="index">
                                     <div v-if="ops.type === 'bool'">
                                         <small>{{ops.description}}</small>
-                                        <v-checkbox v-model="newChart.extra_configs[ops.name]" :label="ops.name" :value="ops.default"
+                                        <v-checkbox v-model="newChart.extra_configs[ops.name]" :label="ops.name"
                                             color="primary">
                                         </v-checkbox>
                                     </div>
                                     <div v-else-if="ops.type === 'selectable'">
                                         <small>{{ops.description}}</small>
                                         <v-select v-model="newChart.extra_configs[ops.name]" :items="ops.options"
-                                        :value="ops.default" :label="ops.name" variant="outlined">
+                                         :label="ops.name" variant="outlined">
                                         </v-select>
                                     </div>
                                 </div>
@@ -228,6 +228,13 @@ export default {
         },
         createChart(isActive) {
             this.newChart.appid = this.appId;
+            // fill extra configs if not set
+            for (let i = 0; i < this.selectedChartConfig.extra_configs.length; i++) {
+                if (!this.newChart.extra_configs[this.selectedChartConfig.extra_configs[i].name]) {
+                    this.newChart.extra_configs[this.selectedChartConfig.extra_configs[i].name] = this.selectedChartConfig.extra_configs[i].default;
+                }
+            }
+
             fetchWrapper(`/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
                 body: JSON.stringify(this.newChart),
@@ -253,6 +260,7 @@ export default {
         createChangeChart(elementId, chartType) {
             console.log(elementId, chartType);
             this.removeDemoChart(elementId)
+            this.newChart.chart_type = chartType;
             // demo
             if (chartType === 'simple_line') {
                 this.updateChart(elementId, {
@@ -290,7 +298,8 @@ export default {
                 chart_type: '',
                 public: false,
                 description: '',
-                appid: ''
+                appid: '',
+                extra_configs: {}
             };
             // remove demo chart
             this.removeDemoChart();

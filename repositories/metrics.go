@@ -9,8 +9,12 @@ import (
 
 type NumberMetricsRepository interface {
 	Add(metric *models.BasicMetricData) error
-	GetPlainNumberVal(appId string, keyName string) ([]models.BasicMetricOutput, error)
-	GetPlainStringVal(appId string, keyName string) ([]models.BasicMetricOutput, error)
+	GetPlainNumberVal(appId string,
+		keyName string,
+		extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error)
+	GetPlainStringVal(appId string,
+		keyName string,
+		extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error)
 }
 
 type metricsRepository struct {
@@ -25,7 +29,10 @@ func (r *metricsRepository) Add(metric *models.BasicMetricData) error {
 	return r.db.Create(metric).Error
 }
 
-func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]models.BasicMetricOutput, error) {
+func (r *metricsRepository) GetPlainNumberVal(
+	appId string,
+	keyName string,
+	extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error) {
 	var err error
 	type TimeMetrics struct {
 		Time  time.Time `json:"k" gorm:"column:k"`
@@ -34,16 +41,38 @@ func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]m
 	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
 	var metrics_ []TimeMetrics = []TimeMetrics{}
 
+	// extraConfig:
+	// method: sum, count, accumulate
+	// distinct_ip: true, false
+
 	query := `
 		SELECT time_bucket('30 minutes', time) as k,
-		SUM((value->>?)::numeric) as v
+	`
+
+	switch extraConfig["method"] {
+	case "sum":
+		query += `SUM((value->>?)::numeric) as v`
+	case "count":
+		query += `COUNT(*) as v`
+	case "accumulate":
+		query += `SUM((value->>?)::numeric) OVER (ORDER BY time_bucket('30 minutes', time)) as v`
+	default:
+		query += `SUM((value->>?)::numeric) as v`
+	}
+
+	query += `
 		FROM basic_metric_data
 		WHERE app_id = ?
 		AND jsonb_typeof(value->?) = 'number'
 		GROUP BY k
 		ORDER BY k
-		LIMIT 1440;
 	`
+
+	if extraConfig["distinct_ip"] == true {
+		query += ` DISTINCT ip`
+	}
+
+	query += ` LIMIT 1440;`
 
 	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
 
@@ -57,7 +86,10 @@ func (r *metricsRepository) GetPlainNumberVal(appId string, keyName string) ([]m
 	return metrics, err
 }
 
-func (r *metricsRepository) GetPlainStringVal(appId string, keyName string) ([]models.BasicMetricOutput, error) {
+func (r *metricsRepository) GetPlainStringVal(
+	appId string,
+	keyName string,
+	extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error) {
 	var err error
 
 	query := `
