@@ -1,0 +1,26 @@
+services:
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    restart: always
+    container_name: timescaledb
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tickstats123456}
+      POSTGRES_DB: ${POSTGRES_DB:-tickstats}
+      PGDATA: ${PGDATA:-/var/lib/postgresql/data/pgdata}
+    volumes:
+      - ./volumes/timescaledb/data:/var/lib/postgresql/data
+    ports:
+      - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
+
+  mysql:
+    image: mysql:8.3
+    restart: always
+    container_name: mysqldb
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-tickstats123456}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tickstats}
+    volumes:
+      - ./volumes/mysql/data:/var/lib/mysql
+    ports:
+      - "${EXPOSE_MYSQL_PORT:-3306}:3306"
