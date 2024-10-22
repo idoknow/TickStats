@@ -16,6 +16,8 @@ export const fetchWrapper = async (url, options = {}) => {
         ...options,
     }).then(async response => {
         if (!response.ok) {
+            let resp = await response.json();
+            response.data = resp;
             return Promise.reject(response);
         }
 

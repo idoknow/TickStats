@@ -18,16 +18,20 @@
                     <v-card :title="AuthTitle[isNewUser]">
 
                         <v-card-text>
-                            <v-text-field v-model="credentials.username" label="Username" variant="outlined"
-                                </v-text-field>
-                                <v-text-field v-model="credentials.email" label="Email" variant="outlined"
-                                    v-if="isNewUser"></v-text-field>
-                                <v-text-field v-model="credentials.password" label="Password" variant="outlined"
-                                    type="password"></v-text-field>
+                            <v-form ref="form">
+                                <v-text-field :rules="[rules.required]" v-model="credentials.username" label="Username"
+                                variant="outlined" </v-text-field>
+                                <v-text-field :rules="[rules.required, rules.email]" v-model="credentials.email"
+                                    label="Email" variant="outlined" v-if="isNewUser"></v-text-field>
+                                <v-text-field :rules="[rules.required, rules.min(8)]" v-model="credentials.password"
+                                    label="Password" variant="outlined" type="password"></v-text-field>
+                                <v-text-field :rules="[rules.required, rules.matchPassword]"
+                                    v-model="credentials.confirmPassword" label="Confirm Password" variant="outlined"
+                                    type="password" v-if="isNewUser"></v-text-field>
+                            </v-form>
 
                                 <a style="text-decoration: underline; cursor: pointer" @click="isNewUser = !isNewUser">
-                                    {{
-                                        AuthHint[isNewUser] }} </a>
+                                    {{ AuthHint[isNewUser] }} </a>
                         </v-card-text>
 
                         <v-card-actions>
@@ -79,7 +83,7 @@ export default {
             menuRail: false,
             items: [
                 { title: 'Home', icon: 'mdi-home', value: -1 },
-                { title: 'Your Applications', icon: 'mdi-view-dashboard', value: 0 },
+                { title: 'Applications', icon: 'mdi-view-dashboard', value: 0 },
                 { title: 'World Stats', icon: 'mdi-chart-bar', value: 1 },
                 { title: 'Settings', icon: 'mdi-cog', value: 2 },
                 { title: 'Sign in/up', icon: 'mdi-account', value: 3 },
@@ -97,8 +101,17 @@ export default {
                 username: '',
                 email: '',
                 password: '',
+                confirmPassword: '',
             },
-
+            rules: {
+                required: value => !!value || 'Required.',
+                email: value => {
+                    const pattern = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/
+                    return pattern.test(value) || 'Invalid e-mail.'
+                },
+                min: length => value => value.length >= length || `Min ${length} characters.`,
+                matchPassword: value => value === this.credentials.password || 'Passwords must match.'
+            },
             toast: {
                 show: false,
                 text: '',
@@ -129,7 +142,12 @@ export default {
             this.toast.timeout = timeout;
             this.toast.show = true;
         },
-        login(isActive) {
+        async login(isActive) {
+            let validate = await this.$refs.form.validate();
+            if (!validate.valid) {
+                this.makeToast('form validate failed', 'error');
+                return;
+            }
             if (this.isNewUser) {
                 fetchWrapper('/api/account/register', {
                     method: 'POST',
@@ -145,8 +163,9 @@ export default {
                     this.credentials.email = '';
                     this.credentials.username = '';
                     this.credentials.password = '';
+                    this.credentials.confirmPassword = '';
                 }).catch((err) => {
-                    this.makeToast(err, 'error');
+                    this.makeToast(err.data.message, 'error');
                 });
             } else {
                 fetchWrapper('/api/account/login', {
@@ -160,7 +179,8 @@ export default {
                     isActive = false;
                     this.auth();
                 }).catch((err) => {
-                    this.makeToast(err, 'error');
+                    console.log(err);
+                    this.makeToast(err.data.message, 'error');
                 });
             }
         },
@@ -177,7 +197,11 @@ export default {
                     account_apps: data.apps
                 })
             }).catch((err) => {
-                this.$emit('error', 'Something went wrong, please try again later: ' + err);
+                if (err.status === 401) {
+                    this.$emit('error', 'You need to sign in to view your apps.');
+                } else {
+                    this.$emit('error', 'Something went wrong, please try again later: ' + err.status);
+                }
             });
         },
         checkScreenWidth() {

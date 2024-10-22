@@ -15,3 +15,9 @@ type ChartResponse struct {
 	AppName     string         `json:"app_name"`
 	AccountName string         `json:"account_name"`
 }
+
+var NotAuthorizedResult = Result{
+	Code:    401,
+	Message: "Not authorized",
+	Data:    nil,
+}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/soulter/tickstats/types"
 )
 
 func JWTAuthMiddleware() gin.HandlerFunc {
@@ -18,7 +19,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			// 从Cookie中获取
 			authHeader = c.GetHeader("Cookie")
 			if authHeader == "" {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Not Authorized"})
+				c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
 				c.Abort()
 				return
 			}
@@ -36,11 +37,17 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return config.JWTSecret, nil
 		})
 
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
+			c.Abort()
+			return
+		}
+
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			c.Set("userID", claims["userID"])
 			c.Next()
 		} else {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
 			c.Abort()
 			return
 		}
