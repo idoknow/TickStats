@@ -55,7 +55,7 @@ func (r *metricsRepository) GetPlainNumberVal(
 	case "count":
 		query += `COUNT(*) as v`
 	case "accumulate":
-		query += `SUM((value->>?)::numeric) OVER (ORDER BY time_bucket('30 minutes', time)) as v`
+		query += `SUM((value->>?)::numeric) OVER (ORDER BY time) as v`
 	default:
 		query += `SUM((value->>?)::numeric) as v`
 	}
@@ -74,7 +74,11 @@ func (r *metricsRepository) GetPlainNumberVal(
 
 	query += ` LIMIT 1440;`
 
-	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
+	if extraConfig["method"] == "count" {
+		err = r.db.Raw(query, appId, keyName).Scan(&metrics_).Error
+	} else {
+		err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
+	}
 
 	for _, metric := range metrics_ {
 		metrics = append(metrics, models.BasicMetricOutput{

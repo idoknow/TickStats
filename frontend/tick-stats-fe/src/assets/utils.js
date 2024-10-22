@@ -137,7 +137,7 @@ export const chartsPresetConfigs = [
         ...
     }
 }`,
-        extra_configs: [
+        extra_config: [
             {
                 name: "distinct_ip",
                 type: "bool",
@@ -165,7 +165,7 @@ export const chartsPresetConfigs = [
         ...
     }
 }`,
-        extra_configs: []
+        extra_config: []
     },
 
 ]

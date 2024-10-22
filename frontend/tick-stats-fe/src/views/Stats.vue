@@ -61,16 +61,16 @@
                                 </v-radio-group>
 
                                 <!-- extra options -->
-                                 <div v-for="(ops, index) in selectedChartConfig.extra_configs" :key="index">
+                                 <div v-for="(ops, index) in selectedChartConfig.extra_config" :key="index">
                                     <div v-if="ops.type === 'bool'">
                                         <small>{{ops.description}}</small>
-                                        <v-checkbox v-model="newChart.extra_configs[ops.name]" :label="ops.name"
+                                        <v-checkbox v-model="newChart.extra_config[ops.name]" :label="ops.name"
                                             color="primary">
                                         </v-checkbox>
                                     </div>
                                     <div v-else-if="ops.type === 'selectable'">
                                         <small>{{ops.description}}</small>
-                                        <v-select v-model="newChart.extra_configs[ops.name]" :items="ops.options"
+                                        <v-select v-model="newChart.extra_config[ops.name]" :items="ops.options"
                                          :label="ops.name" variant="outlined">
                                         </v-select>
                                     </div>
@@ -141,7 +141,7 @@ export default {
             }
             return {
                 demo_data: [],
-                extra_configs: []
+                extra_config: []
             };
         }
     },
@@ -165,7 +165,7 @@ export default {
                 description: '',
                 chart_type: '',
                 public: false,
-                extra_configs: {}
+                extra_config: {}
             },
             createChartTab: 0,
             chartOptions: [],
@@ -229,9 +229,9 @@ export default {
         createChart(isActive) {
             this.newChart.appid = this.appId;
             // fill extra configs if not set
-            for (let i = 0; i < this.selectedChartConfig.extra_configs.length; i++) {
-                if (!this.newChart.extra_configs[this.selectedChartConfig.extra_configs[i].name]) {
-                    this.newChart.extra_configs[this.selectedChartConfig.extra_configs[i].name] = this.selectedChartConfig.extra_configs[i].default;
+            for (let i = 0; i < this.selectedChartConfig.extra_config.length; i++) {
+                if (!this.newChart.extra_config[this.selectedChartConfig.extra_config[i].name]) {
+                    this.newChart.extra_config[this.selectedChartConfig.extra_config[i].name] = this.selectedChartConfig.extra_config[i].default;
                 }
             }
 
@@ -250,7 +250,7 @@ export default {
                     public: false,
                     description: '',
                     appid: '',
-                    extra_configs: {}
+                    extra_config: {}
                 };
             }).catch((error) => {
                 console.error(error);
@@ -299,7 +299,7 @@ export default {
                 public: false,
                 description: '',
                 appid: '',
-                extra_configs: {}
+                extra_config: {}
             };
             // remove demo chart
             this.removeDemoChart();
