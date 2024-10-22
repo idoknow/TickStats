@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,4 +21,14 @@ func CurrentTimeStampSecond() int64 {
 func GenerateUUID(prefix string) string {
 	// Generate a new UUID
 	return fmt.Sprintf("%v", prefix+uuid.New().String()[:8])
+}
+
+func GetRemoteHost(req *http.Request) string {
+	host := req.Header.Get("x-forwarded-for")
+	if host == "" {
+		addr := req.RemoteAddr
+		host, _, _ = net.SplitHostPort(addr)
+		fmt.Println("host", host)
+	}
+	return host
 }

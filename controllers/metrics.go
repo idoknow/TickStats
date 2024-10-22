@@ -7,6 +7,7 @@ import (
 	"github.com/soulter/tickstats/models"
 	"github.com/soulter/tickstats/services"
 	"github.com/soulter/tickstats/types"
+	"github.com/soulter/tickstats/utils"
 )
 
 type MetricsController interface {
@@ -40,10 +41,11 @@ func (controller *metricsController) Add(c *gin.Context) {
 	}
 
 	current_time := time.Now()
-	client_ip := c.ClientIP()
+
+	clientHost := utils.GetRemoteHost(c.Request)
 
 	metricData.AppId = appId
-	metricData.IP = client_ip
+	metricData.IP = clientHost
 	metricData.Time = current_time
 	metricData.Value = metricInput.MetricsData
 
