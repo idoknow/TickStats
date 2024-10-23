@@ -15,6 +15,9 @@
         <v-progress-circular v-if="loading" color="primary" indeterminate></v-progress-circular>
         <p v-if="apps.length == 0 && !loading"> Hmm... You don't have any apps yet. </p>
 
+        <v-fab icon="mdi-refresh" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
+                    @click="fetchApps" :loading="loading"></v-fab>
+
     </div>
 
 </template>
@@ -44,17 +47,28 @@ export default {
         };
     },
     mounted() {
-        this.fetchApps();
+        // this.fetchApps();
+        this.getApps();
     },
     methods: {
+        async getApps() {
+            await this.global.getAccount().then(() => {
+                this.apps = this.global.account.account_apps;
+            });
+        },
+
         fetchApps() {
             this.loading = true;
             fetchWrapper('/api/account/app', {
                 method: 'GET',
             }).then((data) => {
                 this.apps = data;
+                this.showErrAlert = false;
                 this.global.updateState({
-                    account_apps: data
+                    account: {
+                        ...this.global.account,
+                        account_apps: data
+                    }
                 });
             }).catch((err) => {
                 this.showErrAlert = true;
@@ -65,7 +79,7 @@ export default {
                 }
             }).finally(() => {
                 this.loading = false;
-            });
+            }); 
         }
     }
 }

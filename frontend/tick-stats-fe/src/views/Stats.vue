@@ -3,36 +3,40 @@
 
     <div class="content">
 
-        <div style="display: flex; align-items: center">
-            <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
-            </h1>
-            <v-dialog max-width="600">
-                <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;">Manage</v-btn> 
-                </template>
-    
-                <template v-slot:default="{ isActive }">
-                    <v-card title="Manage Charts">
-                        <v-card-text>
-                            <v-list>
-                                <v-list-item v-for="(chart, index) in chartData" :key="index">
-                                    <div style="display: flex; justify-content: space-between">
-                                        <v-list-item-title>{{ chart.chart_name }}@{{ chart.chart_id }}</v-list-item-title>
-                                        <v-btn :key="index" :loading="loading" variant="plain" @click="deleteChart(chart)">Delete</v-btn>
-                                    </div>
-                                    <v-divider></v-divider>
-                                </v-list-item>
-                            </v-list>
-                            <span v-if="chartData.length === 0">No charts yet</span>
-                        </v-card-text>
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn text="Close" @click="isActive.value = false;">Close</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </template>
-            </v-dialog>
+        <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
+        </h1>
+
+        <div>
+            <v-progress-circular v-if="loadingCharts" color="primary" indeterminate></v-progress-circular>
         </div>
+
+        <v-dialog max-width="600">
+            <template v-slot:activator="{ props: activatorProps }">
+                <v-btn v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;">Manage Charts</v-btn>
+            </template>
+
+            <template v-slot:default="{ isActive }">
+                <v-card title="Manage Charts">
+                    <v-card-text>
+                        <v-list>
+                            <v-list-item v-for="(chart, index) in chartData" :key="index">
+                                <div style="display: flex; justify-content: space-between">
+                                    <v-list-item-title>{{ chart.chart_name }}@{{ chart.chart_id }}</v-list-item-title>
+                                    <v-btn :key="index" :loading="loading" variant="plain"
+                                        @click="deleteChart(chart)">Delete</v-btn>
+                                </div>
+                                <v-divider></v-divider>
+                            </v-list-item>
+                        </v-list>
+                        <span v-if="chartData.length === 0">No charts yet</span>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn text="Close" @click="isActive.value = false;">Close</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </template>
+        </v-dialog>
 
 
         <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px; width: 100%;">
@@ -50,7 +54,8 @@
 
             <v-tabs-window v-model="createChartTab">
                 <v-tabs-window-item v-for="n in 3" :key="n" :value="n">
-                    <div style="display: flex; justify-content: center; margin: 8px; flex-direction: column; align-items: center">
+                    <div
+                        style="display: flex; justify-content: center; margin: 8px; flex-direction: column; align-items: center">
                         <p class="text-caption">{{ chartsPresetConfigs[createChartTab].description }}</p>
                         <v-progress-circular v-if="chartTutorialRendering" color="primary"
                             indeterminate></v-progress-circular>
@@ -83,22 +88,22 @@
                                     variant="outlined"></v-text-field>
                                 <v-radio-group v-model="newChart.chart_type" row
                                     @change="createChangeChart('chart-demo2', newChart.chart_type)">
-                                    <v-radio v-for="(chart, index) in chartsPresetConfigs" :key="index" :label="chart.title"
-                                        :value="chart.chart_type"></v-radio>
+                                    <v-radio v-for="(chart, index) in chartsPresetConfigs" :key="index"
+                                        :label="chart.title" :value="chart.chart_type"></v-radio>
                                 </v-radio-group>
 
                                 <!-- extra options -->
-                                 <div v-for="(ops, index) in selectedChartConfig.extra_config" :key="index">
+                                <div v-for="(ops, index) in selectedChartConfig.extra_config" :key="index">
                                     <div v-if="ops.type === 'bool'">
-                                        <small>{{ops.description}}</small>
+                                        <small>{{ ops.description }}</small>
                                         <v-checkbox v-model="newChart.extra_config[ops.name]" :label="ops.name"
                                             color="primary">
                                         </v-checkbox>
                                     </div>
                                     <div v-else-if="ops.type === 'selectable'">
-                                        <small>{{ops.description}}</small>
+                                        <small>{{ ops.description }}</small>
                                         <v-select v-model="newChart.extra_config[ops.name]" :items="ops.options"
-                                         :label="ops.name" variant="outlined">
+                                            :label="ops.name" variant="outlined">
                                         </v-select>
                                     </div>
                                 </div>
@@ -175,6 +180,7 @@ export default {
     data() {
         return {
             loading: false,
+            loadingCharts: false,
             toast: {
                 show: false,
                 text: '',
@@ -182,7 +188,7 @@ export default {
                 timeout: 3000,
             },
             chartInstance: {},
-            chartData: null,
+            chartData: [],
             appId: '',
             accountName: '',
             appName: '',
@@ -317,34 +323,51 @@ export default {
             this.chartInstance[elementId] && this.chartInstance[elementId].dispose();
             this.chartInstance[elementId] && delete this.chartInstance[elementId];
         },
-        getCharts() {
-            console.log(this.global.account_apps)
-            let url = `/api/stats/${this.appId}/charts` // only public charts
-            for (let i = 0; i < this.global.account_apps.length; i++) {
-                if (this.global.account_apps[i].app_id === this.appId) {
-                    url = `/api/account/app/${this.appId}/chart` // all charts
-                    this.isOwner = true;
-                    break;
-                }
+        clearCharts() {
+            for (let key in this.chartInstance) {
+                this.chartInstance[key].dispose();
             }
+            this.chartInstance = {};
+        },
+        async getCharts() {
+            this.clearCharts();
+            this.loadingCharts = true;
+            let url = `/api/stats/${this.appId}/charts` // only public charts
+            await this.global.getAccount().then(() => {
+                for (let i = 0; i < this.global.account.account_apps.length; i++) {
+                    if (this.global.account.account_apps[i].app_id === this.appId) {
+                        url = `/api/account/app/${this.appId}/chart` // all charts
+                        this.isOwner = true;
+                        break;
+                    }
+                }
+            }).catch((err) => {
+                console.error(err);
+            });
 
-            fetchWrapper(url, {
+            await fetchWrapper(url, {
                 method: 'GET',
             }).then((data) => {
                 this.chartData = data.chart;
                 this.accountName = data.account_name;
                 this.appName = data.app_name;
                 this.showErrAlert = false;
-                if (this.chartData.length > 0) {
-                    this.getMetrics();
-                } else {
-                    // user don't have any charts
-                    this.handleEmptyApp();
-                }
+
             }).catch((error) => {
                 console.error(error);
                 this.makeToast('Failed to get charts: ' + error, 'error');
+            }).finally(() => {
+                this.loadingCharts = false;
             });
+
+            if (this.chartData.length > 0) {
+                await this.getMetrics();
+            } else {
+                // user don't have any charts
+                this.handleEmptyApp();
+            }
+
+            
         },
         handleEmptyApp() {
             this.showErrAlert = true;
@@ -365,7 +388,7 @@ export default {
                 this.createChangeChart('chart-demo2', t);
             }, 500);
         },
-        getMetrics() {
+        async getMetrics() {
             for (let i = 0; i < this.chartData.length; i++) {
                 fetchWrapper(`/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`, {
                     method: 'GET',

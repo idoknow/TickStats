@@ -86,7 +86,6 @@ export default {
                 { title: 'Applications', icon: 'mdi-view-dashboard', value: 0 },
                 { title: 'World Stats', icon: 'mdi-chart-bar', value: 1 },
                 { title: 'Settings', icon: 'mdi-cog', value: 2 },
-                { title: 'Sign in/up', icon: 'mdi-account', value: 3 },
             ],
             AuthTitle: {
                 true: 'Sign up',
@@ -185,17 +184,8 @@ export default {
             }
         },
         auth() {
-            fetchWrapper('/api/account/auth', {
-                method: 'GET',
-            }).then((data) => {
-                this.global.updateState({
-                    account: {
-                        name: data.name,
-                        email: data.email,
-                        id: data.id
-                    },
-                    account_apps: data.apps
-                })
+            this.global.getAccount().then(() => {
+                
             }).catch((err) => {
                 if (err.status === 401) {
                     this.$emit('error', 'You need to sign in to view your apps.');
@@ -220,9 +210,6 @@ export default {
                     break;
                 case 2:
                     this.$router.push('/settings');
-                    break;
-                case 3:
-                    this.loginDialog = true;
                     break;
             }
         },

@@ -2,7 +2,7 @@
   <AppBar nav="-1"/>
   <div class='index-main'>
     <svg style="margin-bottom: 16px" t="1722403535188" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5323" width="150" height="150"><path d="M42.666667 853.333333h938.666666v85.333334H42.666667zM341.333333 87.466667h85.333334V768h-85.333334zM597.333333 512h85.333334v256h-85.333334zM85.333333 384h85.333334v384H85.333333zM853.333333 256h85.333334v512h-85.333334z" p-id="5324" fill="#2196F3"></path></svg>
-    <h1 class="gradient index-title">Tick Stats</h1>
+    <h1 class="gradient title">Tick Stats</h1>
     <p style="font-size: 22px; color: #777">A simple & easy Metric Collector</p>
     <div style="display: flex; align-items:center; margin-top: 24px; gap: 16px">
       <v-btn variant="outlined" color="grey" size="x-large" @click="$router.push('/help')">Tutorial</v-btn>
@@ -16,8 +16,8 @@
       <pre class="index-code"><span style="font-weight:bold">POST</span> {{global.baseUrl}}/api/metric/:appid</pre>
     </div>
 
-    <v-row style="margin-top: 64px; gap: 16px" justify="center">
-      <v-col cols="12" md="6" lg="4">
+    <v-row style="margin-top: 64px;" justify="center">
+      <v-col cols="12" md="6">
         <v-card class="text-center">
           <v-card-title style="margin-top: 16px;">
             <v-icon size="64" color="#777">mdi-rocket</v-icon>
@@ -28,7 +28,7 @@
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6" lg="4">
+      <v-col cols="12" md="6">
         <v-card class="text-center">
           <v-card-title style="margin-top: 16px;">
             <v-icon size="64" color="#777">mdi-shield-check</v-icon>
@@ -83,7 +83,7 @@ export default {
   flex-direction: column;
 }
 
-.index-title {
+.title {
   font-size: 64px;
 }
 

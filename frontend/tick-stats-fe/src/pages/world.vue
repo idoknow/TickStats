@@ -30,7 +30,7 @@
 }
 
 .index-title {
-    font-size: 64px;
+    font-size: 40px;
 }
 
 @media (max-width: 600px) {
