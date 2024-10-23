@@ -61,7 +61,7 @@ func (r *metricsRepository) GetPlainNumberVal(
         WITH RECURSIVE time_series AS (
             SELECT generate_series(
                 date_trunc('hour', NOW()) - INTERVAL '30 day',
-                date_trunc('hour', NOW()),
+                date_trunc('hour', NOW() + INTERVAL '30 minutes'),
                 '30 minutes'
             ) AS time
         ),
