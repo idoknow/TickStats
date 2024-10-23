@@ -45,20 +45,48 @@ func (r *metricsRepository) GetPlainNumberVal(
 	// method: sum, count, accumulate
 	// distinct_ip: true, false
 
-	query := `
-		SELECT time_bucket('30 minutes', time) as k,
-	`
-
 	switch extraConfig["method"] {
 	case "count":
-		query += `COUNT(*) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k ORDER BY k LIMIT 1440;`
+		query := `
+		SELECT time_bucket('30 minutes', time) as k, 
+		COUNT(*) as v FROM basic_metric_data 
+		WHERE app_id = ? AND jsonb_typeof(value->?) = 'number'
+		GROUP BY k 
+		ORDER BY k 
+		LIMIT 1440;
+		`
 		err = r.db.Raw(query, appId, keyName).Scan(&metrics_).Error
 	case "accumulate":
-		query += `SUM((value->>?)::numeric) OVER (ORDER BY time) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k,value->>?,time ORDER BY k LIMIT 1440;`
-		err = r.db.Raw(query, keyName, appId, keyName, keyName).Scan(&metrics_).Error
+		query := `
+        WITH RECURSIVE time_series AS (
+            SELECT generate_series(
+                date_trunc('hour', NOW()) - INTERVAL '30 day',
+                date_trunc('hour', NOW()),
+                '30 minutes'
+            ) AS time
+        ),
+        metric_data AS (
+            SELECT ts.time as k, COALESCE(SUM((value->>?)::int), 0) as v
+            FROM time_series ts
+            LEFT JOIN basic_metric_data bmd
+            ON bmd.time >= ts.time
+            AND bmd.time < ts.time + INTERVAL '30 minutes'
+            AND bmd.app_id = ?
+            GROUP BY ts.time
+            ORDER BY ts.time
+        )
+        SELECT k, SUM(v) OVER (ORDER BY k) as v
+        FROM metric_data;
+		`
+		err = r.db.Raw(query, keyName, appId).Scan(&metrics_).Error
 	default:
 		// sum
-		query += `SUM((value->>?)::numeric) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k ORDER BY k LIMIT 1440;`
+		query := `
+		SELECT time_bucket('30 minutes', time) as k,
+		SUM((value->>?)::numeric) as v FROM basic_metric_data 
+		WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' 
+		GROUP BY k 
+		ORDER BY k LIMIT 1440;`
 		err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
 	}
 
