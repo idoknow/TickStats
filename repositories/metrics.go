@@ -50,33 +50,15 @@ func (r *metricsRepository) GetPlainNumberVal(
 	`
 
 	switch extraConfig["method"] {
-	case "sum":
-		query += `SUM((value->>?)::numeric) as v`
 	case "count":
-		query += `COUNT(*) as v`
-	case "accumulate":
-		query += `SUM((value->>?)::numeric) OVER (ORDER BY time) as v`
-	default:
-		query += `SUM((value->>?)::numeric) as v`
-	}
-
-	query += `
-		FROM basic_metric_data
-		WHERE app_id = ?
-		AND jsonb_typeof(value->?) = 'number'
-		GROUP BY k
-		ORDER BY k
-	`
-
-	if extraConfig["distinct_ip"] == true {
-		query += ` DISTINCT ip`
-	}
-
-	query += ` LIMIT 1440;`
-
-	if extraConfig["method"] == "count" {
+		query += `COUNT(*) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k ORDER BY k LIMIT 1440;`
 		err = r.db.Raw(query, appId, keyName).Scan(&metrics_).Error
-	} else {
+	case "accumulate":
+		query += `SUM((value->>?)::numeric) OVER (ORDER BY time) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k,value->>?,time ORDER BY k LIMIT 1440;`
+		err = r.db.Raw(query, keyName, appId, keyName, keyName).Scan(&metrics_).Error
+	default:
+		// sum
+		query += `SUM((value->>?)::numeric) as v FROM basic_metric_data WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' GROUP BY k ORDER BY k LIMIT 1440;`
 		err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
 	}
 
