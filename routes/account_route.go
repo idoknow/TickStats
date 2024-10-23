@@ -15,11 +15,12 @@ func RegisterAccountRoutes(router *gin.Engine, accountController controllers.Acc
 
 	accountRoutes.Use(middlewares.JWTAuthMiddleware())
 	{
-		accountRoutes.GET("app", accountController.GetApplications)               // Get all applications
-		accountRoutes.POST("app/new", accountController.CreateApplication)        // Create a new application
-		accountRoutes.DELETE("app/:appid", accountController.DeleteApplication)   // Delete an application
-		accountRoutes.POST("app/:appid/chart/new", accountController.CreateChart) // Create a new line chart
-		accountRoutes.GET("app/:appid/chart", accountController.GetCharts)        // Get all charts
-		accountRoutes.GET("auth", accountController.GetAuth)                      // Get auth info
+		accountRoutes.GET("app", accountController.GetApplications)                      // Get all applications
+		accountRoutes.POST("app/new", accountController.CreateApplication)               // Create a new application
+		accountRoutes.DELETE("app/:appid", accountController.DeleteApplication)          // Delete an application
+		accountRoutes.POST("app/:appid/chart/new", accountController.CreateChart)        // Create a new line chart
+		accountRoutes.DELETE("app/:appid/chart/:chartid", accountController.DeleteChart) // Delete a chart
+		accountRoutes.GET("app/:appid/chart", accountController.GetCharts)               // Get all charts
+		accountRoutes.GET("auth", accountController.GetAuth)                             // Get auth info
 	}
 }

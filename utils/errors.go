@@ -13,4 +13,5 @@ var (
 	ErrAppNotFound      = fmt.Errorf("application not found")
 	ErrAccountNotFound  = fmt.Errorf("account not found")
 	ErrUnauthorized     = fmt.Errorf("unauthorized")
+	ErrChartNotFound    = fmt.Errorf("chart not found")
 )

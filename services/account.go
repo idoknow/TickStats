@@ -13,6 +13,7 @@ type AccountService interface {
 	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
 	CreateChart(models.Chart) error
+	DeleteChart(account_id int, chartId string) error
 	GetAccount(accountId int) (*models.Account, error)
 }
 
@@ -121,8 +122,40 @@ func (service *accountService) GetApplications(accountId int) ([]models.Applicat
 
 func (service *accountService) CreateChart(chart models.Chart) error {
 
+	// Generate a new chart ID
+	chart.ChartId = utils.GenerateUUID("chart")
+	chart.CreatedTime = utils.CurrentTime()
+	chart.UpdatedTime = utils.CurrentTime()
+
 	// Save the chart to the database
 	if err := service.chartRepository.Create(&chart); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *accountService) DeleteChart(accountId int, chartId string) error {
+
+	// Find the chart by chart ID
+	chart, err := service.chartRepository.FindByChartID(chartId)
+	if err != nil {
+		return err
+	}
+
+	// Find the application by application ID
+	application, err := service.applicationRepository.FindByAppID(chart.AppId)
+
+	if err != nil {
+		return err
+	}
+
+	if application.AccountId != accountId {
+		return utils.ErrUnauthorized
+	}
+
+	// Delete the chart from the database
+	if err := service.chartRepository.Delete(chartId); err != nil {
 		return err
 	}
 

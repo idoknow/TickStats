@@ -7,7 +7,9 @@ import (
 
 type ChartRepository interface {
 	Create(chart *models.Chart) error
+	Delete(chartId string) error
 	FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error)
+	FindByChartID(chartId string) (*models.Chart, error)
 }
 
 type chartRepository struct {
@@ -20,6 +22,10 @@ func NewChartRepository(db *gorm.DB) ChartRepository {
 
 func (r *chartRepository) Create(chart *models.Chart) error {
 	return r.db.Create(chart).Error
+}
+
+func (r *chartRepository) Delete(chartId string) error {
+	return r.db.Where("chart_id = ?", chartId).Delete(&models.Chart{}).Error
 }
 
 func (r *chartRepository) FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error) {
@@ -37,4 +43,15 @@ func (r *chartRepository) FindByAppID(appId string, onlyPublic bool) ([]models.C
 	}
 
 	return charts, nil
+}
+
+func (r *chartRepository) FindByChartID(chartId string) (*models.Chart, error) {
+	var chart models.Chart
+	chart.ChartId = chartId
+	err := r.db.Where("chart_id = ?", chartId).First(&chart).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &chart, nil
 }

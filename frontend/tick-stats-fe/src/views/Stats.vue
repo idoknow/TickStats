@@ -2,14 +2,42 @@
     <AppBar />
 
     <div class="content">
-        <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
-        </h1>
+
+        <div style="display: flex; align-items: center">
+            <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
+            </h1>
+            <v-dialog max-width="600">
+                <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;">Manage</v-btn> 
+                </template>
+    
+                <template v-slot:default="{ isActive }">
+                    <v-card title="Manage Charts">
+                        <v-card-text>
+                            <v-list>
+                                <v-list-item v-for="(chart, index) in chartData" :key="index">
+                                    <div style="display: flex; justify-content: space-between">
+                                        <v-list-item-title>{{ chart.chart_name }}@{{ chart.chart_id }}</v-list-item-title>
+                                        <v-btn :key="index" :loading="loading" variant="plain" @click="deleteChart(chart)">Delete</v-btn>
+                                    </div>
+                                    <v-divider></v-divider>
+                                </v-list-item>
+                            </v-list>
+                            <span v-if="chartData.length === 0">No charts yet</span>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn text="Close" @click="isActive.value = false;">Close</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </template>
+            </v-dialog>
+        </div>
+
 
         <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px; width: 100%;">
             {{ errAlert }}
         </v-alert>
-
-        <v-btn @click="mockData" variant="plain" v-if="devMode">DEBUG: MOCK RANDOM DATA</v-btn>
 
         <!-- Tutorial of creating a chart -->
         <v-card style="width: 100%;" v-if="showCreateChartTutorial">
@@ -37,7 +65,6 @@
             </v-tabs-window>
         </v-card>
 
-        <!-- <v-btn @click="mock" variant="plain">DEBUG: MOCK RANDOM DATA</v-btn> -->
         <v-dialog max-width="800" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
                 <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
@@ -93,7 +120,7 @@
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn text @click="createChart(isActive)">
+                        <v-btn text @click="createChart(isActive)" :loading="loading">
                             Create
                         </v-btn>
                         <v-btn text="Close" @click="isActive.value = false; onCloseCreateChartDialog()">Close</v-btn>
@@ -147,6 +174,7 @@ export default {
     },
     data() {
         return {
+            loading: false,
             toast: {
                 show: false,
                 text: '',
@@ -169,14 +197,13 @@ export default {
             },
             createChartTab: 0,
             chartOptions: [],
-            mock_os: ['Windows', 'Linux', 'MacOS'],
             showErrAlert: false,
             errAlert: '',
             showCreateChartTutorial: false,
             chartTutorialRendering: false,
             creatChartDialog: false,
+            isOwner: false,
             global: useGlobalStore(),
-            devMode: false,
             chartsPresetConfigs: chartsPresetConfigs
         }
     },
@@ -189,28 +216,8 @@ export default {
                 this.chartInstance[key].resize();
             }
         });
-
-        if (this.$route.query.dev === 'true') this.devMode = true;
     },
     methods: {
-        mockData() {
-            fetchWrapper(`/api/metric/${this.appId}`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    metrics_data: {
-                        used_count: Math.floor(Math.random() * 100),
-                        os_name: this.mock_os[Math.floor(Math.random() * 3)]
-                    }
-                })
-            }).then(() => {
-                this.makeToast('Mock data posted successfully');
-                this.getCharts();
-            }).catch((error) => {
-                console.error(error);
-                this.makeToast('Failed to post mock data', 'error');
-            });
-        },
-
         getChartConfig(chartType) {
             for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
                 if (this.chartsPresetConfigs[i].chart_type === chartType) {
@@ -234,7 +241,7 @@ export default {
                     this.newChart.extra_config[this.selectedChartConfig.extra_config[i].name] = this.selectedChartConfig.extra_config[i].default;
                 }
             }
-
+            this.loading = true;
             fetchWrapper(`/api/account/app/${this.appId}/chart/new`, {
                 method: 'POST',
                 body: JSON.stringify(this.newChart),
@@ -255,6 +262,8 @@ export default {
             }).catch((error) => {
                 console.error(error);
                 this.makeToast('Failed to create chart', 'error');
+            }).finally(() => {
+                this.loading = false;
             });
         },
         createChangeChart(elementId, chartType) {
@@ -314,6 +323,7 @@ export default {
             for (let i = 0; i < this.global.account_apps.length; i++) {
                 if (this.global.account_apps[i].app_id === this.appId) {
                     url = `/api/account/app/${this.appId}/chart` // all charts
+                    this.isOwner = true;
                     break;
                 }
             }
@@ -324,6 +334,7 @@ export default {
                 this.chartData = data.chart;
                 this.accountName = data.account_name;
                 this.appName = data.app_name;
+                this.showErrAlert = false;
                 if (this.chartData.length > 0) {
                     this.getMetrics();
                 } else {
@@ -418,6 +429,24 @@ export default {
             }
             chart.setOption(option);
             this.chartInstance[divId] = chart;
+        },
+        deleteChart(chart) {
+            this.loading = true;
+            fetchWrapper(`/api/account/app/${this.appId}/chart/${chart.chart_id}`, {
+                method: 'DELETE',
+            }).then(() => {
+                this.makeToast('Chart deleted successfully');
+                if (this.chartInstance[chart.chart_name]) {
+                    this.chartInstance[chart.chart_name].dispose();
+                    delete this.chartInstance[chart.chart_name];
+                }
+                this.getCharts();
+            }).catch((error) => {
+                console.error(error);
+                this.makeToast('Failed to delete chart', 'error');
+            }).finally(() => {
+                this.loading = false;
+            });
         }
     }
 }

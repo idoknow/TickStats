@@ -19,6 +19,7 @@ type AccountController interface {
 	DeleteApplication(c *gin.Context)
 	GetApplications(c *gin.Context)
 	CreateChart(c *gin.Context)
+	DeleteChart(c *gin.Context)
 	GetCharts(c *gin.Context)
 	GetAuth(c *gin.Context)
 }
@@ -299,6 +300,28 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 	c.JSON(200, types.Result{
 		Code:    200,
 		Message: "Create chart success",
+		Data:    nil,
+	})
+}
+
+func (controller *accountController) DeleteChart(c *gin.Context) {
+	chartId := c.Param("chartid")
+
+	userId, _ := c.Get("userID")
+	accountId := int(userId.(float64))
+
+	if err := controller.accountService.DeleteChart(accountId, chartId); err != nil {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Delete chart success",
 		Data:    nil,
 	})
 }
