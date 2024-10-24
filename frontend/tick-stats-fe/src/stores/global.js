@@ -33,6 +33,17 @@ export const useGlobalStore = defineStore('global', {
         })
         return this.account
       }
+    },
+    clearAccount() {
+      this.updateState({
+        account: {
+          loaded: false,
+          id: '',
+          name: '',
+          email: '',
+          account_apps: [],
+        }
+      })
     }
   }
 })

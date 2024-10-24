@@ -74,7 +74,7 @@
             </v-tabs-window>
         </v-card>
 
-        <v-dialog max-width="800" v-model="creatChartDialog">
+        <v-dialog max-width="1000" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
                 <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
                     v-bind:="activatorProps" @click="onFabClicked"></v-fab>
@@ -84,7 +84,7 @@
                 <v-card title="Chart">
                     <div class="create-chart-container">
                         <div style="flex: 1; width: 100%;">
-                            <v-card-text style="margin-top: 24px;">
+                            <v-card-text style="margin-top: 16px;">
                                 <v-text-field v-model="newChart.data.chart_name" label="Chart Name"
                                     variant="outlined"></v-text-field>
                                 <v-text-field v-model="newChart.data.description" label="Description(optional)"
@@ -110,8 +110,9 @@
                                         </v-select>
                                     </div>
                                 </div>
-
+                                <small>Public charts can be viewed by anyone</small>
                                 <v-checkbox v-model="newChart.data.public" label="Public" color="primary"></v-checkbox>
+                                <small>Used to query metrics, corresponds to the key name in the `metrics_data`</small>
                                 <v-text-field v-model="newChart.data.key_name" label="Key Name"
                                     variant="outlined"></v-text-field>
 
@@ -151,10 +152,11 @@
 
 <script>
 import AppBar from '@/components/AppBar.vue';
-import * as echarts from 'echarts';
+
 import { fetchWrapper, fillingTimeData, chartsPresetConfigs } from '@/assets/utils';
 import { useGlobalStore } from '@/stores/global';
-import { ChartForm } from '@/assets/charts';
+import { ChartForm } from '@/assets/chart_form';
+import { Chart } from '@/assets/chart';
 
 export default {
     components: {
@@ -388,9 +390,13 @@ export default {
         },
         async getMetrics() {
             for (let i = 0; i < this.chartData.length; i++) {
-                fetchWrapper(`/api/metric/${this.appId}?key_name=${this.chartData[i].key_name}&chart_type=${this.chartData[i].chart_type}`, {
+                fetchWrapper(`/api/metric/${this.appId}/${this.chartData[i].chart_id}`, {
                     method: 'GET',
                 }).then((data) => {
+                    let _display_type = 'default';
+                    if (this.chartData[i].extra_config.only_represent_number) {
+                        _display_type = 'plain_number';
+                    }
                     if (this.chartData[i].chart_type === 'simple_line') {
                         this.updateChartView(this.chartData[i].chart_name, {
                             ...this.getChartConfig('simple_line').option_model,
@@ -404,6 +410,7 @@ export default {
                                     data: fillingTimeData(data)
                                 }
                             ],
+                            _display_type: _display_type,
                         });
                     } else if (this.chartData[i].chart_type === 'simple_pie') {
                         this.updateChartView(this.chartData[i].chart_name, {
@@ -446,9 +453,9 @@ export default {
             if (this.chartInstance[divId]) {
                 chart = this.chartInstance[divId];
             } else {
-                chart = echarts.init(document.getElementById(divId));
+                chart = new Chart(divId)
+                chart.initChart(option);
             }
-            chart.setOption(option);
             this.chartInstance[divId] = chart;
         },
         async deleteChart(chart) {
@@ -522,7 +529,7 @@ export default {
 .create-chart-container {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    justify-content: center;
     overflow-y: scroll;
     gap: 16px
 }

@@ -126,7 +126,7 @@ export const fillingTimeData = (items, count = 1496, interval_mins = 30) => {
 
 export const chartsPresetConfigs = [
     {
-        title: 'Simple Line Chart',
+        title: 'Simple Line Chart / Plain Number',
         chart_type: 'simple_line',
         option_model: simpleLineChartOptionModel,
         demo_data: generateTimeDemoData(),
@@ -150,6 +150,12 @@ export const chartsPresetConfigs = [
                 type: "bool",
                 default: false,
                 description: "Only available for `count` method."
+            },
+            {
+                name: "only_represent_number",
+                type: "bool",
+                default: false,
+                description: "Only display the number of the latest data point."
             },
         ]
     },

@@ -36,7 +36,7 @@
 
                         <v-card-actions>
                             <v-spacer></v-spacer>
-                            <v-btn text @click="login(isActive)">
+                            <v-btn text @click="login(isActive)" :loading="loading">
                                 {{ AuthTitle[isNewUser] }}
                             </v-btn>
                             <v-btn text="Close"
@@ -54,8 +54,14 @@
         <v-list nav>
             <v-list-item v-for="item in items" :key="item.title" :prepend-icon="item.icon" :title="item.title"
                 :value="item.value" @click="router(item.value)" :active="nav == item.value" </v-list-item>
-
         </v-list>
+        <template v-slot:append v-if="!menuRail && global.account.name != ''">
+            <div style="margin-bottom: 16px;">
+              <v-btn @click="logout" block :prepend-icon="mdi-account" variant="plain">
+                Logout
+              </v-btn>
+            </div>
+        </template>
     </v-navigation-drawer>
     <v-navigation-drawer v-else temporary v-model="mobileDrawer" app>
         <v-list nav>
@@ -63,6 +69,13 @@
                 :value="item.value" @click="router(item.value)" :active="nav == item.value" </v-list-item>
                 <v-divider></v-divider>
         </v-list>
+        <template v-slot:append v-if="global.account.name != ''">
+            <div style="margin-bottom: 16px;">
+              <v-btn @click="logout" block :prepend-icon="mdi-account" variant="plain">
+                Logout
+              </v-btn>
+            </div>
+        </template>
     </v-navigation-drawer>
 
     <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
@@ -77,6 +90,7 @@ import { useGlobalStore } from '@/stores/global';
 export default {
     data() {
         return {
+            loading: false,
             loginDialog: false,
             isMobile: false,
             mobileDrawer: false,
@@ -142,13 +156,14 @@ export default {
             this.toast.show = true;
         },
         async login(isActive) {
+            this.loading = true;
             let validate = await this.$refs.form.validate();
             if (!validate.valid) {
                 this.makeToast('form validate failed', 'error');
                 return;
             }
             if (this.isNewUser) {
-                fetchWrapper('/api/account/register', {
+                await fetchWrapper('/api/account/register', {
                     method: 'POST',
                     body: JSON.stringify({
                         name: this.credentials.username,
@@ -156,8 +171,8 @@ export default {
                         password: this.credentials.password,
                     }),
                 }).then(() => {
+                    isActive.value = false;
                     this.makeToast('Register successful', 'success');
-                    isActive = false;
                     this.isNewUser = false;
                     this.credentials.email = '';
                     this.credentials.username = '';
@@ -167,21 +182,22 @@ export default {
                     this.makeToast(err.data.message, 'error');
                 });
             } else {
-                fetchWrapper('/api/account/login', {
+                await fetchWrapper('/api/account/login', {
                     method: 'POST',
                     body: JSON.stringify({
                         username: this.credentials.username,
                         password: this.credentials.password,
                     }),
                 }).then(() => {
+                    isActive.value = false;
                     this.makeToast('Login successful', 'success');
-                    isActive = false;
                     this.auth();
                 }).catch((err) => {
                     console.log(err);
                     this.makeToast(err.data.message, 'error');
                 });
             }
+            this.loading = false;
         },
         auth() {
             this.global.getAccount().then(() => {
@@ -192,6 +208,17 @@ export default {
                 } else {
                     this.$emit('error', 'Something went wrong, please try again later: ' + err.status);
                 }
+            }).finally(() => {
+            });
+        },
+        async logout() {
+            await fetchWrapper('/api/account/logout', {
+                method: 'GET',
+            }).then(() => {
+                this.global.clearAccount();
+                this.makeToast('Logout successful', 'success');
+            }).catch((err) => {
+                this.makeToast(err.data.message, 'error');
             });
         },
         checkScreenWidth() {

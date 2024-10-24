@@ -23,6 +23,7 @@ type AccountController interface {
 	UpdateChart(c *gin.Context)
 	GetCharts(c *gin.Context)
 	GetAuth(c *gin.Context)
+	Logout(c *gin.Context)
 }
 
 type accountController struct {
@@ -148,6 +149,7 @@ func (controller *accountController) GetAuth(c *gin.Context) {
 		Email        string               `json:"email"`
 		Name         string               `json:"name"`
 		Applications []models.Application `json:"apps"`
+		Token        string               `json:"token"`
 	}
 
 	account, err := controller.accountService.GetAccount(accountId)
@@ -378,5 +380,39 @@ func (controller *accountController) GetCharts(c *gin.Context) {
 		Code:    200,
 		Message: "Get charts success",
 		Data:    charts,
+	})
+}
+
+func (controller *accountController) Logout(c *gin.Context) {
+	domain := c.Request.Header.Get("Origin")
+
+	if gin.Mode() == gin.DebugMode {
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "token",
+			Value:    ":(",
+			Path:     "/",
+			Domain:   domain,
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+			HttpOnly: false,
+			MaxAge:   0,
+		})
+	} else {
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:     "token",
+			Value:    ":(",
+			Path:     "/",
+			Domain:   domain,
+			Secure:   false,
+			SameSite: http.SameSiteStrictMode,
+			HttpOnly: false,
+			MaxAge:   0,
+		})
+	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Logout success",
+		Data:    nil,
 	})
 }

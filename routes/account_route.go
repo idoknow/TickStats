@@ -13,7 +13,7 @@ func RegisterAccountRoutes(router *gin.Engine, accountController controllers.Acc
 		accountRoutes.POST("login", accountController.Login)       // Login
 	}
 
-	accountRoutes.Use(middlewares.JWTAuthMiddleware())
+	accountRoutes.Use(middlewares.JWTAuthMiddleware(true))
 	{
 		accountRoutes.GET("app", accountController.GetApplications)                      // Get all applications
 		accountRoutes.POST("app/new", accountController.CreateApplication)               // Create a new application
@@ -23,5 +23,6 @@ func RegisterAccountRoutes(router *gin.Engine, accountController controllers.Acc
 		accountRoutes.PUT("app/:appid/chart/:chartid", accountController.UpdateChart)    // Update a chart
 		accountRoutes.GET("app/:appid/chart", accountController.GetCharts)               // Get all charts
 		accountRoutes.GET("auth", accountController.GetAuth)                             // Get auth info
+		accountRoutes.GET("logout", accountController.Logout)                            // Logout
 	}
 }

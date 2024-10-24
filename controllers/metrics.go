@@ -67,11 +67,21 @@ func (controller *metricsController) Add(c *gin.Context) {
 
 func (controller *metricsController) Get(c *gin.Context) {
 	appId := c.Param("appid")
+	chartId := c.Param("chartid")
 
-	keyName := c.Query("key_name")
-	chartType := c.Query("chart_type")
+	// keyName := c.Query("key_name")
+	// chartType := c.Query("chart_type")
 
-	metrics, err := controller.metricsService.GetByAppID(appId, chartType, keyName)
+	if appId == "" || chartId == "" {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: "Invalid request",
+			Data:    nil,
+		})
+		return
+	}
+
+	metrics, err := controller.metricsService.GetByAppID(c, appId, chartId)
 	if err != nil {
 		c.JSON(400, types.Result{
 			Code:    400,

@@ -41,6 +41,9 @@
       </v-col>
     </v-row>
 
+    <!-- footer -->
+    <span style="margin-top: 32px; color: #777;">Hatched from <a href="https://idoknow.top">idoknow</a> with ❤️</span>
+
     
   </div>
 

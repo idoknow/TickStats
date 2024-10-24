@@ -101,7 +101,7 @@ func SetupRouter() *gin.Engine {
 	chartRepo := repositories.NewChartRepository(db)
 	metricsRepo := repositories.NewMetricsRepository(metricsDB)
 	accountService := services.NewAccountService(accountRepo, applicationRepo, chartRepo)
-	metricsService := services.NewMetricsService(metricsRepo, chartRepo)
+	metricsService := services.NewMetricsService(metricsRepo, chartRepo, applicationRepo)
 	statsService := services.NewStatsService(applicationRepo, chartRepo, accountRepo)
 	accountController := controllers.NewAccountController(accountService, statsService)
 	metricsController := controllers.NewMetricsController(metricsService)

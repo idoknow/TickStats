@@ -11,16 +11,24 @@ import (
 	"github.com/soulter/tickstats/types"
 )
 
-func JWTAuthMiddleware() gin.HandlerFunc {
+func JWTAuthMiddleware(directlyAbort bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		abortHandler := func() {
+			if directlyAbort {
+				c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
+				c.Abort()
+			} else {
+				c.Set("isAuthorized", false)
+			}
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		tokenString := ""
 		if authHeader == "" {
 			// 从Cookie中获取
 			authHeader = c.GetHeader("Cookie")
 			if authHeader == "" {
-				c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
-				c.Abort()
+				abortHandler()
 				return
 			}
 			cookie := strings.Split(authHeader, ";")
@@ -38,17 +46,16 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
-			c.Abort()
+			abortHandler()
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			c.Set("userID", claims["userID"])
+			c.Set("isAuthorized", true)
 			c.Next()
 		} else {
-			c.JSON(http.StatusUnauthorized, types.NotAuthorizedResult)
-			c.Abort()
+			abortHandler()
 			return
 		}
 	}
