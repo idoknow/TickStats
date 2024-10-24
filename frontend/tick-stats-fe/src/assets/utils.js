@@ -8,8 +8,8 @@ export const fetchWrapper = async (url, options = {}) => {
     }
 
     return fetch(url, {
-        credentials: 'include',
         headers: {
+            'Authorization': localStorage.getItem('token'),
             'Content-Type': 'application/json',
             ...options.headers,
         },

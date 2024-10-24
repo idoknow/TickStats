@@ -188,7 +188,8 @@ export default {
                         username: this.credentials.username,
                         password: this.credentials.password,
                     }),
-                }).then(() => {
+                }).then((data) => {
+                    localStorage.setItem('token', data.token);
                     isActive.value = false;
                     this.makeToast('Login successful', 'success');
                     this.auth();
@@ -212,14 +213,9 @@ export default {
             });
         },
         async logout() {
-            await fetchWrapper('/api/account/logout', {
-                method: 'GET',
-            }).then(() => {
-                this.global.clearAccount();
-                this.makeToast('Logout successful', 'success');
-            }).catch((err) => {
-                this.makeToast(err.data.message, 'error');
-            });
+            localStorage.setItem('token', ':(');
+            this.global.clearAccount();
+            this.makeToast('Logout successful', 'success');
         },
         checkScreenWidth() {
             this.isMobile = window.innerWidth <= 768;

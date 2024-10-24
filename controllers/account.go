@@ -133,10 +133,16 @@ func (controller *accountController) Login(c *gin.Context) {
 		})
 	}
 
+	var ret struct {
+		Token string `json:"token"`
+	}
+
+	ret.Token = "Bearer " + tokenString
+
 	c.JSON(200, types.Result{
 		Code:    200,
 		Message: "Login success",
-		Data:    nil,
+		Data:    ret,
 	})
 }
 
@@ -149,7 +155,6 @@ func (controller *accountController) GetAuth(c *gin.Context) {
 		Email        string               `json:"email"`
 		Name         string               `json:"name"`
 		Applications []models.Application `json:"apps"`
-		Token        string               `json:"token"`
 	}
 
 	account, err := controller.accountService.GetAccount(accountId)

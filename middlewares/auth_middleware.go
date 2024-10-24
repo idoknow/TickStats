@@ -39,6 +39,10 @@ func JWTAuthMiddleware(directlyAbort bool) gin.HandlerFunc {
 				}
 			}
 		} else {
+			if !strings.Contains(authHeader, "Bearer ") {
+				abortHandler()
+				return
+			}
 			tokenString = strings.Split(authHeader, "Bearer ")[1]
 		}
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
