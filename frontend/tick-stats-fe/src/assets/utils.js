@@ -139,18 +139,18 @@ export const chartsPresetConfigs = [
 }`,
         extra_config: [
             {
-                name: "distinct_ip",
-                type: "bool",
-                default: false,
-                description: "Count distinct IP addresses."
-            },
-            {
                 name: "method",
                 type: "selectable",
                 default: "sum",
                 options: ["sum", "count", "accumulate"],
                 description: "The method to aggregate the data points."
-            }
+            },
+            {
+                name: "distinct_ip",
+                type: "bool",
+                default: false,
+                description: "Only available for `count` method."
+            },
         ]
     },
     {

@@ -20,6 +20,7 @@ func RegisterAccountRoutes(router *gin.Engine, accountController controllers.Acc
 		accountRoutes.DELETE("app/:appid", accountController.DeleteApplication)          // Delete an application
 		accountRoutes.POST("app/:appid/chart/new", accountController.CreateChart)        // Create a new line chart
 		accountRoutes.DELETE("app/:appid/chart/:chartid", accountController.DeleteChart) // Delete a chart
+		accountRoutes.PUT("app/:appid/chart/:chartid", accountController.UpdateChart)    // Update a chart
 		accountRoutes.GET("app/:appid/chart", accountController.GetCharts)               // Get all charts
 		accountRoutes.GET("auth", accountController.GetAuth)                             // Get auth info
 	}

@@ -21,9 +21,13 @@
                         <v-list>
                             <v-list-item v-for="(chart, index) in chartData" :key="index">
                                 <div style="display: flex; justify-content: space-between">
-                                    <v-list-item-title>{{ chart.chart_name }}@{{ chart.chart_id }}</v-list-item-title>
-                                    <v-btn :key="index" :loading="loading" variant="plain"
+                                    <v-list-item-title><span style="font-weight: bold;">{{ chart.chart_name }}</span>@{{ chart.chart_id }}</v-list-item-title>
+                                    <div>
+                                        <v-btn :key="index" variant="plain"
+                                        @click="editChat(chart)">Edit</v-btn>
+                                        <v-btn :key="index" :loading="loading" variant="plain"
                                         @click="deleteChart(chart)">Delete</v-btn>
+                                    </div>
                                 </div>
                                 <v-divider></v-divider>
                             </v-list-item>
@@ -73,21 +77,20 @@
         <v-dialog max-width="800" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
                 <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
-                    v-bind:="activatorProps"></v-fab>
+                    v-bind:="activatorProps" @click="onFabClicked"></v-fab>
             </template>
 
             <template v-slot:default="{ isActive }">
-                <v-card title="Create Chart">
+                <v-card title="Chart">
                     <div class="create-chart-container">
-                        <div style="flex: 1; width: 100%">
-                            <v-card-text>
-                                <v-text-field readonly v-model="appId" label="App Id" variant="outlined"></v-text-field>
-                                <v-text-field v-model="newChart.chart_name" label="Chart Name"
+                        <div style="flex: 1; width: 100%;">
+                            <v-card-text style="margin-top: 24px;">
+                                <v-text-field v-model="newChart.data.chart_name" label="Chart Name"
                                     variant="outlined"></v-text-field>
-                                <v-text-field v-model="newChart.description" label="Description(optional)"
+                                <v-text-field v-model="newChart.data.description" label="Description(optional)"
                                     variant="outlined"></v-text-field>
-                                <v-radio-group v-model="newChart.chart_type" row
-                                    @change="createChangeChart('chart-demo2', newChart.chart_type)">
+                                <v-radio-group v-model="newChart.data.chart_type" row
+                                    @change="createChangeChart('chart-demo2', newChart.data.chart_type)">
                                     <v-radio v-for="(chart, index) in chartsPresetConfigs" :key="index"
                                         :label="chart.title" :value="chart.chart_type"></v-radio>
                                 </v-radio-group>
@@ -96,25 +99,28 @@
                                 <div v-for="(ops, index) in selectedChartConfig.extra_config" :key="index">
                                     <div v-if="ops.type === 'bool'">
                                         <small>{{ ops.description }}</small>
-                                        <v-checkbox v-model="newChart.extra_config[ops.name]" :label="ops.name"
+                                        <v-checkbox v-model="newChart.data.extra_config[ops.name]" :label="ops.name"
                                             color="primary">
                                         </v-checkbox>
                                     </div>
                                     <div v-else-if="ops.type === 'selectable'">
                                         <small>{{ ops.description }}</small>
-                                        <v-select v-model="newChart.extra_config[ops.name]" :items="ops.options"
+                                        <v-select v-model="newChart.data.extra_config[ops.name]" :items="ops.options"
                                             :label="ops.name" variant="outlined">
                                         </v-select>
                                     </div>
                                 </div>
 
-                                <v-checkbox v-model="newChart.public" label="Public" color="primary"></v-checkbox>
-                                <v-text-field v-model="newChart.key_name" label="Key Name"
+                                <v-checkbox v-model="newChart.data.public" label="Public" color="primary"></v-checkbox>
+                                <v-text-field v-model="newChart.data.key_name" label="Key Name"
                                     variant="outlined"></v-text-field>
+
+                                <p>App Id: {{ appId }}</p>
+                                <p v-if="newChart.data.chart_id" style="margin-bottom: 16px;">Chart Id: {{ newChart.data.chart_id }}</p>
                             </v-card-text>
                         </div>
 
-                        <div style="flex:2; margin-top:16px" v-if="newChart.chart_type != ''">
+                        <div style="flex:2; margin-top:16px" v-if="newChart.data.chart_type != ''">
                             <h3>Chart Demo</h3>
                             <div id="chart-demo2" style="width: 100%; height: 300px"></div>
                             <h3>Data Example</h3>
@@ -122,10 +128,10 @@
                         </div>
 
                     </div>
-
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn text @click="createChart(isActive)" :loading="loading">
+                        <v-btn v-if="newChart.data.chart_id" text @click="updateChart(isActive)" :loading="loading">Update</v-btn>
+                        <v-btn v-else text @click="createChart(isActive)" :loading="loading">
                             Create
                         </v-btn>
                         <v-btn text="Close" @click="isActive.value = false; onCloseCreateChartDialog()">Close</v-btn>
@@ -148,6 +154,7 @@ import AppBar from '@/components/AppBar.vue';
 import * as echarts from 'echarts';
 import { fetchWrapper, fillingTimeData, chartsPresetConfigs } from '@/assets/utils';
 import { useGlobalStore } from '@/stores/global';
+import { ChartForm } from '@/assets/charts';
 
 export default {
     components: {
@@ -156,9 +163,9 @@ export default {
     computed: {
         metricPushExample() {
             // for creating a new chart
-            if (this.newChart.chart_type === '') return '';
+            if (this.newChart.data.chart_type === '') return '';
             for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
-                if (this.chartsPresetConfigs[i].chart_type === this.newChart.chart_type) {
+                if (this.chartsPresetConfigs[i].chart_type === this.newChart.data.chart_type) {
                     return this.chartsPresetConfigs[i].metric_example;
                 }
             }
@@ -167,7 +174,7 @@ export default {
         selectedChartConfig() {
             // for creating a new chart
             for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
-                if (this.chartsPresetConfigs[i].chart_type === this.newChart.chart_type) {
+                if (this.chartsPresetConfigs[i].chart_type === this.newChart.data.chart_type) {
                     return this.chartsPresetConfigs[i];
                 }
             }
@@ -192,15 +199,7 @@ export default {
             appId: '',
             accountName: '',
             appName: '',
-            newChart: {
-                appid: '',
-                chart_name: '',
-                key_name: '',
-                description: '',
-                chart_type: '',
-                public: false,
-                extra_config: {}
-            },
+            newChart: new ChartForm(),
             createChartTab: 0,
             chartOptions: [],
             showErrAlert: false,
@@ -224,6 +223,10 @@ export default {
         });
     },
     methods: {
+        onFabClicked() {
+            this.creatChartDialog = true;
+            this.newChart.resetForm();
+        },
         getChartConfig(chartType) {
             for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
                 if (this.chartsPresetConfigs[i].chart_type === chartType) {
@@ -232,53 +235,52 @@ export default {
             }
             return null;
         },
-
         makeToast(text, color = 'primary', timeout = 3000) {
             this.toast.text = text;
             this.toast.color = color;
             this.toast.timeout = timeout;
             this.toast.show = true;
         },
-        createChart(isActive) {
-            this.newChart.appid = this.appId;
+        async createChart(isActive) {
+            this.newChart.data.appid = this.appId;
             // fill extra configs if not set
             for (let i = 0; i < this.selectedChartConfig.extra_config.length; i++) {
-                if (!this.newChart.extra_config[this.selectedChartConfig.extra_config[i].name]) {
-                    this.newChart.extra_config[this.selectedChartConfig.extra_config[i].name] = this.selectedChartConfig.extra_config[i].default;
+                if (!this.newChart.data.extra_config[this.selectedChartConfig.extra_config[i].name]) {
+                    this.newChart.data.extra_config[this.selectedChartConfig.extra_config[i].name] = this.selectedChartConfig.extra_config[i].default;
                 }
             }
-            this.loading = true;
-            fetchWrapper(`/api/account/app/${this.appId}/chart/new`, {
-                method: 'POST',
-                body: JSON.stringify(this.newChart),
-            }).then(() => {
+            try {
+                this.loading = true;
+                await this.newChart.create();
                 isActive.value = false;
                 this.makeToast('Chart created successfully');
-                this.showCreateChartTutorial = false;
                 this.getCharts();
-                this.newChart = {
-                    chart_name: '',
-                    key_name: '',
-                    chart_type: '',
-                    public: false,
-                    description: '',
-                    appid: '',
-                    extra_config: {}
-                };
-            }).catch((error) => {
-                console.error(error);
-                this.makeToast('Failed to create chart', 'error');
-            }).finally(() => {
+            } catch (error) {
+                this.makeToast('Failed to create chart: ' + error, 'error');
+            } finally {
                 this.loading = false;
-            });
+            }
+        },
+        async updateChart(isActive) {
+            try {
+                this.loading = true;
+                await this.newChart.update();
+                isActive.value = false;
+                this.makeToast('Chart updated successfully');
+                this.getCharts();
+            } catch (error) {
+                this.makeToast('Failed to update chart: ' + error, 'error');
+            } finally {
+                this.loading = false;
+            }
         },
         createChangeChart(elementId, chartType) {
             console.log(elementId, chartType);
             this.removeDemoChart(elementId)
-            this.newChart.chart_type = chartType;
+            this.newChart.data.chart_type = chartType;
             // demo
             if (chartType === 'simple_line') {
-                this.updateChart(elementId, {
+                this.updateChartView(elementId, {
                     ...this.selectedChartConfig.option_model,
                     series: [
                         {
@@ -293,11 +295,11 @@ export default {
                     },
                 });
             } else if (chartType === 'simple_pie') {
-                this.updateChart(elementId, {
+                this.updateChartView(elementId, {
                     ...this.selectedChartConfig.option_model,
                     series: [
                         {
-                            name: this.newChart.chart_name,
+                            name: this.newChart.data.chart_name,
                             type: 'pie',
                             data: this.selectedChartConfig.demo_data
                         }
@@ -307,15 +309,7 @@ export default {
         },
         onCloseCreateChartDialog() {
             console.log('close');
-            this.newChart = {
-                chart_name: '',
-                key_name: '',
-                chart_type: '',
-                public: false,
-                description: '',
-                appid: '',
-                extra_config: {}
-            };
+            this.newChart.resetForm();
             // remove demo chart
             this.removeDemoChart();
         },
@@ -326,8 +320,14 @@ export default {
         clearCharts() {
             for (let key in this.chartInstance) {
                 this.chartInstance[key].dispose();
+                // 从DOM删除
+                let chartDiv = document.getElementById(key);
+                if (chartDiv) {
+                    chartDiv.remove();
+                }
             }
             this.chartInstance = {};
+            this.chartData = [];
         },
         async getCharts() {
             this.clearCharts();
@@ -366,8 +366,6 @@ export default {
                 // user don't have any charts
                 this.handleEmptyApp();
             }
-
-            
         },
         handleEmptyApp() {
             this.showErrAlert = true;
@@ -383,7 +381,7 @@ export default {
         onTutorialCreateBtnClicked() {
             let t = this.chartsPresetConfigs[this.createChartTab].chart_type;
             this.creatChartDialog = true;
-            this.newChart.chart_type = t;
+            this.newChart.data.chart_type = t;
             setTimeout(() => {
                 this.createChangeChart('chart-demo2', t);
             }, 500);
@@ -394,7 +392,7 @@ export default {
                     method: 'GET',
                 }).then((data) => {
                     if (this.chartData[i].chart_type === 'simple_line') {
-                        this.updateChart(this.chartData[i].chart_name, {
+                        this.updateChartView(this.chartData[i].chart_name, {
                             ...this.getChartConfig('simple_line').option_model,
                             title: {
                                 text: this.chartData[i].chart_name
@@ -408,7 +406,7 @@ export default {
                             ],
                         });
                     } else if (this.chartData[i].chart_type === 'simple_pie') {
-                        this.updateChart(this.chartData[i].chart_name, {
+                        this.updateChartView(this.chartData[i].chart_name, {
                             ...this.getChartConfig('simple_pie').option_model,
                             title: {
                                 text: this.chartData[i].chart_name
@@ -434,7 +432,7 @@ export default {
             }
 
         },
-        updateChart(divId, option) {
+        updateChartView(divId, option) {
             // create element if not exist
             if (!document.getElementById(divId)) {
                 const chartDiv = document.createElement('div');
@@ -453,23 +451,47 @@ export default {
             chart.setOption(option);
             this.chartInstance[divId] = chart;
         },
-        deleteChart(chart) {
+        async deleteChart(chart) {
             this.loading = true;
-            fetchWrapper(`/api/account/app/${this.appId}/chart/${chart.chart_id}`, {
-                method: 'DELETE',
-            }).then(() => {
+            this.newChart.data = {
+                chart_id: chart.chart_id,
+                chart_name: chart.chart_name,
+                key_name: chart.key_name,
+                chart_type: chart.chart_type,
+                public: chart.public,
+                description: chart.description,
+                appid: this.appId,
+                extra_config: chart.extra_config
+            }
+            try {
+                await this.newChart.delete();
                 this.makeToast('Chart deleted successfully');
                 if (this.chartInstance[chart.chart_name]) {
                     this.chartInstance[chart.chart_name].dispose();
                     delete this.chartInstance[chart.chart_name];
                 }
                 this.getCharts();
-            }).catch((error) => {
-                console.error(error);
+            } catch (error) {
                 this.makeToast('Failed to delete chart', 'error');
-            }).finally(() => {
+            } finally {
                 this.loading = false;
-            });
+            }
+        },
+        editChat(chart) {
+            this.creatChartDialog = true;
+            this.newChart.data = {
+                chart_id: chart.chart_id,
+                chart_name: chart.chart_name,
+                key_name: chart.key_name,
+                chart_type: chart.chart_type,
+                public: chart.public,
+                description: chart.description,
+                appid: this.appId,
+                extra_config: chart.extra_config
+            };
+            setTimeout(() => {
+                this.createChangeChart('chart-demo2', chart.chart_type);
+            }, 500);
         }
     }
 }

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/soulter/tickstats/models"
@@ -47,14 +48,19 @@ func (r *metricsRepository) GetPlainNumberVal(
 
 	switch extraConfig["method"] {
 	case "count":
-		query := `
-		SELECT time_bucket('30 minutes', time) as k, 
-		COUNT(*) as v FROM basic_metric_data 
-		WHERE app_id = ? AND jsonb_typeof(value->?) = 'number'
-		GROUP BY k 
-		ORDER BY k 
-		LIMIT 1440;
-		`
+		var _v_select string
+		if extraConfig["distinct_ip"] == true {
+			_v_select = "COUNT(DISTINCT ip) as v"
+		} else {
+			_v_select = "COUNT(ip) as v"
+		}
+		query := fmt.Sprintf(`
+			SELECT time_bucket('30 minutes', time) as k, %s FROM basic_metric_data 
+			WHERE app_id = ? AND jsonb_typeof(value->?) = 'number'
+			GROUP BY k 
+			ORDER BY k 
+			LIMIT 1440;
+		`, _v_select)
 		err = r.db.Raw(query, appId, keyName).Scan(&metrics_).Error
 	case "accumulate":
 		query := `

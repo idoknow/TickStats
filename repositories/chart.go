@@ -8,6 +8,7 @@ import (
 type ChartRepository interface {
 	Create(chart *models.Chart) error
 	Delete(chartId string) error
+	Update(chart *models.Chart) error
 	FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error)
 	FindByChartID(chartId string) (*models.Chart, error)
 }
@@ -26,6 +27,10 @@ func (r *chartRepository) Create(chart *models.Chart) error {
 
 func (r *chartRepository) Delete(chartId string) error {
 	return r.db.Where("chart_id = ?", chartId).Delete(&models.Chart{}).Error
+}
+
+func (r *chartRepository) Update(chart *models.Chart) error {
+	return r.db.Save(chart).Error
 }
 
 func (r *chartRepository) FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error) {
