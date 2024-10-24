@@ -25,20 +25,18 @@ func SetupRouter() *gin.Engine {
 	_ = godotenv.Load()
 
 	// CORS
-	if gin.Mode() == gin.DebugMode {
-		router.Use(
-			cors.New(
-				cors.Config{
-					AllowOrigins:     []string{"*"},
-					AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
-					AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
-					ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-					AllowCredentials: true,
-					MaxAge:           12 * time.Hour,
-				},
-			),
-		)
-	}
+	router.Use(
+		cors.New(
+			cors.Config{
+				AllowOrigins:     []string{"*"},
+				AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"},
+				AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
+				ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+				AllowCredentials: true,
+				MaxAge:           12 * time.Hour,
+			},
+		),
+	)
 
 	router.StaticFile("/", "./frontend/tick-stats-fe/dist/index.html")
 	router.Static("/assets", "./frontend/tick-stats-fe/dist/assets")
