@@ -12,10 +12,14 @@ type NumberMetricsRepository interface {
 	Add(metric *models.BasicMetricData) error
 	GetPlainNumberVal(appId string,
 		keyName string,
-		extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error)
+		extraConfig map[string]interface{},
+		from int64,
+		to int64) ([]models.BasicMetricOutput, error)
 	GetPlainStringVal(appId string,
 		keyName string,
-		extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error)
+		extraConfig map[string]interface{},
+		from int64,
+		to int64) ([]models.BasicMetricOutput, error)
 }
 
 type metricsRepository struct {
@@ -33,7 +37,9 @@ func (r *metricsRepository) Add(metric *models.BasicMetricData) error {
 func (r *metricsRepository) GetPlainNumberVal(
 	appId string,
 	keyName string,
-	extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error) {
+	extraConfig map[string]interface{},
+	from int64,
+	to int64) ([]models.BasicMetricOutput, error) {
 	var err error
 	type TimeMetrics struct {
 		Time  time.Time `json:"k" gorm:"column:k"`
@@ -109,7 +115,9 @@ func (r *metricsRepository) GetPlainNumberVal(
 func (r *metricsRepository) GetPlainStringVal(
 	appId string,
 	keyName string,
-	extraConfig map[string]interface{}) ([]models.BasicMetricOutput, error) {
+	extraConfig map[string]interface{},
+	from int64,
+	to int64) ([]models.BasicMetricOutput, error) {
 	var err error
 
 	query := `
@@ -118,10 +126,11 @@ func (r *metricsRepository) GetPlainStringVal(
 		FROM basic_metric_data
 		WHERE app_id = ?
 		AND jsonb_typeof(value->?) = 'string'
-		AND time > NOW() - INTERVAL '1 hour'
+		AND time >= to_timestamp(?)
+		AND time <= to_timestamp(?)
 		GROUP BY k
 	`
 	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
-	err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics).Error
+	err = r.db.Raw(query, keyName, appId, keyName, from, to).Scan(&metrics).Error
 	return metrics, err
 }

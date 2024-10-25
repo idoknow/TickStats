@@ -1,4 +1,5 @@
 import * as echarts from 'echarts';
+import { shallowRef } from 'vue';
 
 class Chart {
     constructor(divId) {
@@ -17,9 +18,9 @@ class Chart {
                 <h3 color="#666">${title}</h3>
                 <div style="font-size: 72px; font-weight: bold; display: flex; align-items: center; justify-content: center; height: 100%"><span>${value}</span></div>
             `
-
         } else {
-            this.chart = echarts.init(document.getElementById(this.divId));
+            // this.chart = echarts.init(document.getElementById(this.divId));
+            this.chart = shallowRef(echarts.init(document.getElementById(this.divId)));
             this.chart.setOption(option);
         }
     }

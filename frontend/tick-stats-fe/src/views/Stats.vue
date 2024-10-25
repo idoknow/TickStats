@@ -76,7 +76,7 @@
 
         <v-dialog max-width="1000" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
-                <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px;"
+                <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px; z-index: 1000;"
                     v-bind:="activatorProps" @click="onFabClicked"></v-fab>
             </template>
 
@@ -141,7 +141,10 @@
             </template>
         </v-dialog>
 
-
+        <div v-for="(chart, index) in chartData" :key="chart.chart_id" style="width: 100%;">
+            <SimplePie v-if="chart.chart_type == 'simple_pie'" :chart-data="chart"></SimplePie>
+            <BasicChart v-else :chart-data="chart"></BasicChart>
+        </div>
     </div>
 
     <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
@@ -157,10 +160,14 @@ import { fetchWrapper, fillingTimeData, chartsPresetConfigs } from '@/assets/uti
 import { useGlobalStore } from '@/stores/global';
 import { ChartForm } from '@/assets/chart_form';
 import { Chart } from '@/assets/chart';
+import SimplePie from '@/components/charts/SimplePie.vue';
+import BasicChart from '@/components/charts/BasicChart.vue';
 
 export default {
     components: {
         AppBar,
+        SimplePie,
+        BasicChart,
     },
     computed: {
         metricPushExample() {
@@ -196,7 +203,7 @@ export default {
                 color: 'primary',
                 timeout: 3000,
             },
-            chartInstance: {},
+            demoChartInstance: null,
             chartData: [],
             appId: '',
             accountName: '',
@@ -217,25 +224,11 @@ export default {
     mounted() {
         this.appId = this.$route.params.appid;
         this.getCharts();
-
-        window.addEventListener('resize', () => {
-            for (let key in this.chartInstance) {
-                this.chartInstance[key].resize();
-            }
-        });
     },
     methods: {
         onFabClicked() {
             this.creatChartDialog = true;
             this.newChart.resetForm();
-        },
-        getChartConfig(chartType) {
-            for (let i = 0; i < this.chartsPresetConfigs.length; i++) {
-                if (this.chartsPresetConfigs[i].chart_type === chartType) {
-                    return this.chartsPresetConfigs[i];
-                }
-            }
-            return null;
         },
         makeToast(text, color = 'primary', timeout = 3000) {
             this.toast.text = text;
@@ -278,35 +271,32 @@ export default {
         },
         createChangeChart(elementId, chartType) {
             console.log(elementId, chartType);
-            this.removeDemoChart(elementId)
+            this.removeDemoChart()
             this.newChart.data.chart_type = chartType;
-            // demo
             if (chartType === 'simple_line') {
-                this.updateChartView(elementId, {
+                this.demoChartInstance = new Chart(elementId)
+                this.demoChartInstance.initChart({
                     ...this.selectedChartConfig.option_model,
-                    series: [
-                        {
+                    series: [{
                             showSymbol: false,
                             type: 'line',
                             data: this.selectedChartConfig.demo_data
-                        }
-                    ],
+                        }],
                     grid: {
                         top: '16px',
                         containLabel: true
                     },
                 });
             } else if (chartType === 'simple_pie') {
-                this.updateChartView(elementId, {
+                this.demoChartInstance = new Chart(elementId)
+                this.demoChartInstance.initChart({
                     ...this.selectedChartConfig.option_model,
-                    series: [
-                        {
+                    series: [{
                             name: this.newChart.data.chart_name,
                             type: 'pie',
                             data: this.selectedChartConfig.demo_data
-                        }
-                    ],
-                });
+                        }],
+                })
             }
         },
         onCloseCreateChartDialog() {
@@ -315,21 +305,13 @@ export default {
             // remove demo chart
             this.removeDemoChart();
         },
-        removeDemoChart(elementId) {
-            this.chartInstance[elementId] && this.chartInstance[elementId].dispose();
-            this.chartInstance[elementId] && delete this.chartInstance[elementId];
+        removeDemoChart() {
+            if (this.demoChartInstance) {
+                this.demoChartInstance.dispose();
+                this.demoChartInstance = null;
+            }
         },
         clearCharts() {
-            for (let key in this.chartInstance) {
-                this.chartInstance[key].dispose();
-                // 从DOM删除
-                let chartDiv = document.getElementById(key);
-                if (chartDiv) {
-                    chartDiv.remove();
-                }
-            }
-            this.chartInstance = {};
-            this.chartData = [];
         },
         async getCharts() {
             this.clearCharts();
@@ -347,14 +329,15 @@ export default {
                 console.error(err);
             });
 
+            let _chartData = [];
+
             await fetchWrapper(url, {
                 method: 'GET',
             }).then((data) => {
-                this.chartData = data.chart;
+                _chartData = data.chart;
                 this.accountName = data.account_name;
                 this.appName = data.app_name;
                 this.showErrAlert = false;
-
             }).catch((error) => {
                 console.error(error);
                 this.makeToast('Failed to get charts: ' + error, 'error');
@@ -362,11 +345,11 @@ export default {
                 this.loadingCharts = false;
             });
 
-            if (this.chartData.length > 0) {
-                await this.getMetrics();
-            } else {
+            if (_chartData.length == 0) {
                 // user don't have any charts
                 this.handleEmptyApp();
+            } else {
+                this.chartData = _chartData;
             }
         },
         handleEmptyApp() {
@@ -388,76 +371,6 @@ export default {
                 this.createChangeChart('chart-demo2', t);
             }, 500);
         },
-        async getMetrics() {
-            for (let i = 0; i < this.chartData.length; i++) {
-                fetchWrapper(`/api/metric/${this.appId}/${this.chartData[i].chart_id}`, {
-                    method: 'GET',
-                }).then((data) => {
-                    let _display_type = 'default';
-                    if (this.chartData[i].extra_config.only_represent_number) {
-                        _display_type = 'plain_number';
-                    }
-                    if (this.chartData[i].chart_type === 'simple_line') {
-                        this.updateChartView(this.chartData[i].chart_name, {
-                            ...this.getChartConfig('simple_line').option_model,
-                            title: {
-                                text: this.chartData[i].chart_name
-                            },
-                            series: [
-                                {
-                                    showSymbol: false,
-                                    type: 'line',
-                                    data: fillingTimeData(data)
-                                }
-                            ],
-                            _display_type: _display_type,
-                        });
-                    } else if (this.chartData[i].chart_type === 'simple_pie') {
-                        this.updateChartView(this.chartData[i].chart_name, {
-                            ...this.getChartConfig('simple_pie').option_model,
-                            title: {
-                                text: this.chartData[i].chart_name
-                            },
-                            series: [
-                                {
-                                    name: this.chartData[i].chart_name,
-                                    type: 'pie',
-                                    data: data.map((item) => {
-                                        return {
-                                            name: item.k,
-                                            value: item.v
-                                        }
-                                    })
-                                }
-                            ],
-                        });
-                    }
-                }).catch((error) => {
-                    console.error(error);
-                    this.makeToast('Failed to get metrics', 'error');
-                });
-            }
-
-        },
-        updateChartView(divId, option) {
-            // create element if not exist
-            if (!document.getElementById(divId)) {
-                const chartDiv = document.createElement('div');
-                chartDiv.id = divId;
-                chartDiv.style.width = '100%';
-                chartDiv.style.height = '350px';
-                chartDiv.style.marginTop = '16px';
-                document.querySelector('.content').appendChild(chartDiv);
-            }
-            let chart = null;
-            if (this.chartInstance[divId]) {
-                chart = this.chartInstance[divId];
-            } else {
-                chart = new Chart(divId)
-                chart.initChart(option);
-            }
-            this.chartInstance[divId] = chart;
-        },
         async deleteChart(chart) {
             this.loading = true;
             this.newChart.data = {
@@ -473,10 +386,6 @@ export default {
             try {
                 await this.newChart.delete();
                 this.makeToast('Chart deleted successfully');
-                if (this.chartInstance[chart.chart_name]) {
-                    this.chartInstance[chart.chart_name].dispose();
-                    delete this.chartInstance[chart.chart_name];
-                }
                 this.getCharts();
             } catch (error) {
                 this.makeToast('Failed to delete chart', 'error');

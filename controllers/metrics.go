@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -72,6 +73,35 @@ func (controller *metricsController) Get(c *gin.Context) {
 	// keyName := c.Query("key_name")
 	// chartType := c.Query("chart_type")
 
+	// from and to is a timestamp
+	from_str := c.Query("from")
+	to_str := c.Query("to")
+	var err error
+	var from, to int64
+	if from_str != "" {
+		// convert to int64 directly
+		from, err = strconv.ParseInt(from_str, 10, 64)
+		if err != nil {
+			c.JSON(400, types.Result{
+				Code:    400,
+				Message: "Invalid from",
+				Data:    nil,
+			})
+			return
+		}
+	}
+	if to_str != "" {
+		to, err = strconv.ParseInt(to_str, 10, 64)
+		if err != nil {
+			c.JSON(400, types.Result{
+				Code:    400,
+				Message: "Invalid to",
+				Data:    nil,
+			})
+			return
+		}
+	}
+
 	if appId == "" || chartId == "" {
 		c.JSON(400, types.Result{
 			Code:    400,
@@ -81,7 +111,7 @@ func (controller *metricsController) Get(c *gin.Context) {
 		return
 	}
 
-	metrics, err := controller.metricsService.GetByAppID(c, appId, chartId)
+	metrics, err := controller.metricsService.GetByAppID(c, appId, chartId, from, to)
 	if err != nil {
 		c.JSON(400, types.Result{
 			Code:    400,

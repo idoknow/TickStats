@@ -13,5 +13,7 @@ var (
 	ErrAppNotFound      = fmt.Errorf("application not found")
 	ErrAccountNotFound  = fmt.Errorf("account not found")
 	ErrUnauthorized     = fmt.Errorf("unauthorized")
+	ErrInvalidTimeRange = fmt.Errorf("invalid time range")
+	ErrTimeRangeTooLong = fmt.Errorf("time range too long")
 	ErrChartNotFound    = fmt.Errorf("chart not found")
 )

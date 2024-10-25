@@ -9,7 +9,7 @@ import (
 
 type MetricsService interface {
 	Add(metric models.BasicMetricData) error
-	GetByAppID(c *gin.Context, string, chartId string) ([]models.BasicMetricOutput, error)
+	GetByAppID(c *gin.Context, string, chartId string, from int64, to int64) ([]models.BasicMetricOutput, error)
 }
 
 type metricsService struct {
@@ -32,7 +32,7 @@ func (s *metricsService) Add(metric models.BasicMetricData) error {
 	return s.metricsRepository.Add(&metric)
 }
 
-func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string) ([]models.BasicMetricOutput, error) {
+func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string, from int64, to int64) ([]models.BasicMetricOutput, error) {
 	var metrics []models.BasicMetricOutput
 	var err error
 
@@ -59,11 +59,32 @@ func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string
 		}
 	}
 
+	// from and to must be both set or both unset
+	if (from == 0 && to != 0) || (from != 0 && to == 0) {
+		return nil, utils.ErrInvalidTimeRange
+	}
+	if from != 0 && to != 0 && from > to {
+		return nil, utils.ErrInvalidTimeRange
+	}
+	if from == 0 && to == 0 {
+		// 1 days interval
+		to = utils.GetCurrentTimestamp()
+		from = to - 60*60*24
+	} else {
+		// cannot query more than 7 days
+		if from < utils.GetCurrentTimestamp()-60*60*24*7 {
+			return nil, utils.ErrInvalidTimeRange
+		}
+		if to-from > 60*60*24*7 {
+			return nil, utils.ErrTimeRangeTooLong
+		}
+	}
+
 	switch chart.ChartType {
 	case models.SimpleLine:
-		metrics, err = s.metricsRepository.GetPlainNumberVal(appId, chart.KeyName, chart.ExtraConfig)
+		metrics, err = s.metricsRepository.GetPlainNumberVal(appId, chart.KeyName, chart.ExtraConfig, from, to)
 	case models.SimplePie:
-		metrics, err = s.metricsRepository.GetPlainStringVal(appId, chart.KeyName, chart.ExtraConfig)
+		metrics, err = s.metricsRepository.GetPlainStringVal(appId, chart.KeyName, chart.ExtraConfig, from, to)
 	default:
 		return nil, utils.ErrInvalidChartType
 	}
