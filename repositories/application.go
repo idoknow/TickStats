@@ -11,6 +11,7 @@ type ApplicationRepository interface {
 	FindByAccountID(accountId int) ([]models.Application, error)
 	FindByAppID(appId string) (*models.Application, error)
 	FindPublicByPage(page, size int) ([]models.Application, error)
+	Update(application *models.Application) error
 }
 
 type applicationRepository struct {
@@ -51,4 +52,8 @@ func (r *applicationRepository) FindPublicByPage(page, size int) ([]models.Appli
 		return nil, err
 	}
 	return applications, nil
+}
+
+func (r *applicationRepository) Update(application *models.Application) error {
+	return r.db.Where("app_id = ?", application.AppId).Updates(application).Error
 }

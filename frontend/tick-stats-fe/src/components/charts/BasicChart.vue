@@ -1,5 +1,15 @@
 <template>
-    <div :id="chartData.chart_id" style="width: 100%; margin-top: 16px; height: 350px;">
+    <div v-show="!initLoaded" style="display: flex; justify-content: center; align-items: center; height: 350px; flex-direction: column">
+        <small>Hang On...</small>
+        <v-progress-linear
+        style="width: 50%"
+        color="deep-purple-accent-4"
+        height="6"
+        indeterminate
+        rounded
+        ></v-progress-linear>        
+    </div>
+    <div v-show="initLoaded" :id="chartData.chart_id" style="margin-top: 16px; height: 350px; min-width: 100%; ">
     </div>
 </template>
 
@@ -13,20 +23,23 @@ export default {
     },
     data() {
         return {
-            value: [0, 100],
+            initLoaded: false,
             chart: null,
         };
     },
     mounted() {
-        window.addEventListener('resize', () => {
+        // 当div的宽度发生变化时，重新渲染图表
+        new ResizeObserver(() => {
             if (this.chart) {
                 this.chart.resize();
             }
-        });
+        }).observe(document.getElementById(this.chartData.chart_id));
+
         this.getMetric(this.chartData.appid, this.chartData.chart_id, this.chartData).then(() => {
             if (this.chart) this.chart.dispose();
             this.chart = new Chart(this.chartData.chart_id)
             this.chart.initChart(this.chartData.option);
+            this.initLoaded = true;
         });
     },
     methods: {

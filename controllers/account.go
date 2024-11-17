@@ -10,6 +10,7 @@ import (
 	"github.com/soulter/tickstats/models"
 	"github.com/soulter/tickstats/services"
 	"github.com/soulter/tickstats/types"
+	"gopkg.in/validator.v2"
 )
 
 type AccountController interface {
@@ -18,6 +19,7 @@ type AccountController interface {
 	CreateApplication(c *gin.Context)
 	DeleteApplication(c *gin.Context)
 	GetApplications(c *gin.Context)
+	UpdateApplication(c *gin.Context)
 	CreateChart(c *gin.Context)
 	DeleteChart(c *gin.Context)
 	UpdateChart(c *gin.Context)
@@ -253,6 +255,36 @@ func (controller *accountController) GetApplications(c *gin.Context) {
 	})
 }
 
+func (controller *accountController) UpdateApplication(c *gin.Context) {
+	var application models.Application
+	if err := c.ShouldBindJSON(&application); err != nil {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	userId, _ := c.Get("userID")
+	accountId := int(userId.(float64))
+
+	if err := controller.accountService.UpdateApplication(accountId, &application); err != nil {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	c.JSON(200, types.Result{
+		Code:    200,
+		Message: "Update application success",
+		Data:    nil,
+	})
+}
+
 func (controller *accountController) CreateChart(c *gin.Context) {
 	appId := c.Param("appid")
 	var chart models.Chart
@@ -265,6 +297,15 @@ func (controller *accountController) CreateChart(c *gin.Context) {
 		})
 		return
 	}
+
+	if err := validator.Validate(&chart); err != nil {
+		c.JSON(400, types.Result{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+    }
 
 	// get application by account id
 	userId, _ := c.Get("userID")

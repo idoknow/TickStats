@@ -157,7 +157,8 @@ export const chartsPresetConfigs = [
                 default: false,
                 description: "Only display the number of the latest data point."
             },
-        ]
+        ],
+        multiple_keys: false
     },
     {
         title: 'Simple Pie Chart',
@@ -171,9 +172,23 @@ export const chartsPresetConfigs = [
         ...
     }
 }`,
-        extra_config: []
+        extra_config: [],
+        multiple_keys: false
     },
-
+    {
+        title: 'Table',
+        chart_type: 'table',
+        option_model: {_chart_type: 'table'},
+        demo_data: [],
+        description: 'A simple table to display data.',
+        metric_example: `{
+    "metrics_data": {
+        "os_name": "windows",
+        "user_count": 100,
+        ...
+    }
+}`,
+        extra_config: [],
+        multiple_keys: true
+    },
 ]
-
-

@@ -3,45 +3,70 @@
 
     <div class="content">
 
-        <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
-        </h1>
+        <div style="margin: 0px 16px 32px 16px">
+            <div style="display: flex; width: 100%; align-items: center; justify-content:center">
+                <h1 class="gradient index-title" v-if="accountName !== ''">{{ accountName }}/{{ appName }} Stats
+                </h1>
+                <v-dialog max-width="600">
+                    <template v-slot:activator="{ props: activatorProps }">
+                        <v-btn icon v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;"
+                            color="primary" size="70">
+                            <v-icon>mdi-cog</v-icon>
+                        </v-btn>
+                    </template>
+
+                    <template v-slot:default="{ isActive }">
+                        <v-card title="Manage Charts">
+                            <v-card-text>
+                                <v-list>
+                                    <v-list-item v-for="(chart, index) in chartData" :key="index">
+                                        <div style="display: flex; justify-content: space-between">
+                                            <v-list-item-title><span style="font-weight: bold;"> {{ index + 1 }}. {{
+                                                chart.chart_name
+                                                    }}</span>@{{ chart.chart_id }}</v-list-item-title>
+                                            <div>
+                                                <v-btn :key="index" variant="plain"
+                                                    @click="editChat(chart)">Edit</v-btn>
+                                                <v-btn :key="index" :loading="loading" variant="plain"
+                                                    @click="deleteChart(chart)">Delete</v-btn>
+                                            </div>
+                                        </div>
+                                        <v-divider></v-divider>
+                                    </v-list-item>
+                                </v-list>
+                                <div v-if="chartData.length > 0" style="margin-top: 16px;">
+                                    <v-text-field v-model="chartLayoutInput" label="Layout" variant="outlined"
+                                        append-icon="mdi-check" @click:append="applyChartLayout" :loading="loadingUpdateApp">
+                                    </v-text-field>
+                                    <small>布局：分号分隔每一可视化行，逗号分隔每一行中的视图 ID。</small>
+                                </div>
+
+                                <div style="margin-top: 16px;">
+                                    <v-textarea v-model="appData.description" label="Application Description" variant="outlined"
+                                        append-icon="mdi-check" @click:append="updateApplication" :loading="loadingUpdateApp">
+                                    </v-textarea>
+                                </div>
+
+                                <span v-if="chartData.length === 0">No charts yet</span>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn text="Close" @click="isActive.value = false;">Close</v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </template>
+                </v-dialog>
+            </div>
+
+            <div style="margin-top: 16px; display: flex; width: 100%; align-items: center; justify-content:center">
+                <small>{{ appData.description }}</small>
+            </div>
+
+        </div>
 
         <div>
             <v-progress-circular v-if="loadingCharts" color="primary" indeterminate></v-progress-circular>
         </div>
-
-        <v-dialog max-width="600">
-            <template v-slot:activator="{ props: activatorProps }">
-                <v-btn v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;">Manage Charts</v-btn>
-            </template>
-
-            <template v-slot:default="{ isActive }">
-                <v-card title="Manage Charts">
-                    <v-card-text>
-                        <v-list>
-                            <v-list-item v-for="(chart, index) in chartData" :key="index">
-                                <div style="display: flex; justify-content: space-between">
-                                    <v-list-item-title><span style="font-weight: bold;">{{ chart.chart_name }}</span>@{{ chart.chart_id }}</v-list-item-title>
-                                    <div>
-                                        <v-btn :key="index" variant="plain"
-                                        @click="editChat(chart)">Edit</v-btn>
-                                        <v-btn :key="index" :loading="loading" variant="plain"
-                                        @click="deleteChart(chart)">Delete</v-btn>
-                                    </div>
-                                </div>
-                                <v-divider></v-divider>
-                            </v-list-item>
-                        </v-list>
-                        <span v-if="chartData.length === 0">No charts yet</span>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn text="Close" @click="isActive.value = false;">Close</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </template>
-        </v-dialog>
-
 
         <v-alert v-model="showErrAlert" type="info" variant="tonal" closable style="margin: 16px 0px; width: 100%;">
             {{ errAlert }}
@@ -76,8 +101,9 @@
 
         <v-dialog max-width="1000" v-model="creatChartDialog">
             <template v-slot:activator="{ props: activatorProps }">
-                <v-fab icon="mdi-plus" color="primary" size="52" style="position: fixed; right: 80px; bottom: 52px; z-index: 1000;"
-                    v-bind:="activatorProps" @click="onFabClicked"></v-fab>
+                <v-fab icon="mdi-plus" color="primary" size="52"
+                    style="position: fixed; right: 80px; bottom: 52px; z-index: 1000;" v-bind:="activatorProps"
+                    @click="onFabClicked"></v-fab>
             </template>
 
             <template v-slot:default="{ isActive }">
@@ -113,11 +139,12 @@
                                 <small>Public charts can be viewed by anyone</small>
                                 <v-checkbox v-model="newChart.data.public" label="Public" color="primary"></v-checkbox>
                                 <small>Used to query metrics, corresponds to the key name in the `metrics_data`</small>
-                                <v-text-field v-model="newChart.data.key_name" label="Key Name"
-                                    variant="outlined"></v-text-field>
+                                <v-combobox v-model="newChart.key_name_input" :items="items" label="Key Name" chips
+                                    multiple variant="outlined" style="margin-top: 16px;"></v-combobox>
 
                                 <p>App Id: {{ appId }}</p>
-                                <p v-if="newChart.data.chart_id" style="margin-bottom: 16px;">Chart Id: {{ newChart.data.chart_id }}</p>
+                                <p v-if="newChart.data.chart_id" style="margin-bottom: 16px;">Chart Id: {{
+                                    newChart.data.chart_id }}</p>
                             </v-card-text>
                         </div>
 
@@ -131,7 +158,8 @@
                     </div>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn v-if="newChart.data.chart_id" text @click="updateChart(isActive)" :loading="loading">Update</v-btn>
+                        <v-btn v-if="newChart.data.chart_id" text @click="updateChart(isActive)"
+                            :loading="loading">Update</v-btn>
                         <v-btn v-else text @click="createChart(isActive)" :loading="loading">
                             Create
                         </v-btn>
@@ -141,10 +169,27 @@
             </template>
         </v-dialog>
 
-        <div v-for="(chart, index) in chartData" :key="chart.chart_id" style="width: 100%;">
-            <SimplePie v-if="chart.chart_type == 'simple_pie'" :chart-data="chart"></SimplePie>
-            <BasicChart v-else :chart-data="chart"></BasicChart>
+        <div style="padding-left: 16px; padding-right: 16px; width: 100%">
+            <v-row v-for="(row, index) in chartLayout" :key="index" align="center" justify="center">
+                <v-col v-for="(chartIdx, index) in row" :key="chartIdx" cols="12" md="6" v-if="row.length == 2">
+                    <SimplePie v-if="chartData[chartIdx - 1].chart_type == 'simple_pie'"
+                        :chart-data="chartData[chartIdx - 1]">
+                    </SimplePie>
+                    <BasicChart v-else-if="chartData[chartIdx - 1].chart_type == 'simple_line'"
+                        :chart-data="chartData[chartIdx - 1]"></BasicChart>
+                    <Table v-else :chart-data="chartData[chartIdx - 1]"></Table>
+                </v-col>
+                <v-col v-for="(chartIdx, index) in row" :key="chartIdx" cols="12" v-if="row.length == 1">
+                    <SimplePie v-if="chartData[chartIdx - 1].chart_type == 'simple_pie'"
+                        :chart-data="chartData[chartIdx - 1]">
+                    </SimplePie>
+                    <BasicChart v-else-if="chartData[chartIdx - 1].chart_type == 'simple_line'"
+                        :chart-data="chartData[chartIdx - 1]"></BasicChart>
+                    <Table v-else :chart-data="chartData[chartIdx - 1]"></Table>
+                </v-col>
+            </v-row>
         </div>
+
     </div>
 
     <v-snackbar v-model="toast.show" :color="toast.color" :timeout="toast.timeout">
@@ -162,12 +207,13 @@ import { ChartForm } from '@/assets/chart_form';
 import { Chart } from '@/assets/chart';
 import SimplePie from '@/components/charts/SimplePie.vue';
 import BasicChart from '@/components/charts/BasicChart.vue';
-
+import Table from '@/components/charts/BasicChart.vue';
 export default {
     components: {
         AppBar,
         SimplePie,
         BasicChart,
+        Table
     },
     computed: {
         metricPushExample() {
@@ -208,6 +254,7 @@ export default {
             appId: '',
             accountName: '',
             appName: '',
+            appData: {},
             newChart: new ChartForm(),
             createChartTab: 0,
             chartOptions: [],
@@ -218,7 +265,11 @@ export default {
             creatChartDialog: false,
             isOwner: false,
             global: useGlobalStore(),
-            chartsPresetConfigs: chartsPresetConfigs
+            chartsPresetConfigs: chartsPresetConfigs,
+            chartLayoutInput: '',
+            chartLayout: [],
+            
+            loadingUpdateApp: false,
         }
     },
     mounted() {
@@ -251,7 +302,7 @@ export default {
                 this.makeToast('Chart created successfully');
                 this.getCharts();
             } catch (error) {
-                this.makeToast('Failed to create chart: ' + error, 'error');
+                this.makeToast('Failed to create chart: ' + error.data.message, 'error');
             } finally {
                 this.loading = false;
             }
@@ -278,10 +329,10 @@ export default {
                 this.demoChartInstance.initChart({
                     ...this.selectedChartConfig.option_model,
                     series: [{
-                            showSymbol: false,
-                            type: 'line',
-                            data: this.selectedChartConfig.demo_data
-                        }],
+                        showSymbol: false,
+                        type: 'line',
+                        data: this.selectedChartConfig.demo_data
+                    }],
                     grid: {
                         top: '16px',
                         containLabel: true
@@ -292,10 +343,10 @@ export default {
                 this.demoChartInstance.initChart({
                     ...this.selectedChartConfig.option_model,
                     series: [{
-                            name: this.newChart.data.chart_name,
-                            type: 'pie',
-                            data: this.selectedChartConfig.demo_data
-                        }],
+                        name: this.newChart.data.chart_name,
+                        type: 'pie',
+                        data: this.selectedChartConfig.demo_data
+                    }],
                 })
             }
         },
@@ -311,10 +362,7 @@ export default {
                 this.demoChartInstance = null;
             }
         },
-        clearCharts() {
-        },
         async getCharts() {
-            this.clearCharts();
             this.loadingCharts = true;
             let url = `/api/stats/${this.appId}/charts` // only public charts
             await this.global.getAccount().then(() => {
@@ -322,6 +370,7 @@ export default {
                     if (this.global.account.account_apps[i].app_id === this.appId) {
                         url = `/api/account/app/${this.appId}/chart` // all charts
                         this.isOwner = true;
+                        this.appData = this.global.account.account_apps[i];
                         break;
                     }
                 }
@@ -350,6 +399,16 @@ export default {
                 this.handleEmptyApp();
             } else {
                 this.chartData = _chartData;
+
+                if (!this.appData.layout) {
+                    for (let i = 0; i < this.chartData.length; i++) {
+                        this.chartLayout.push([i]);
+                    }
+                } else {
+                    this.chartLayoutInput = this.appData.layout;
+                    this.applyChartLayout(false);
+                }
+
             }
         },
         handleEmptyApp() {
@@ -405,9 +464,54 @@ export default {
                 appid: this.appId,
                 extra_config: chart.extra_config
             };
+            this.newChart.key_name_input = chart.key_name.split(',');
             setTimeout(() => {
                 this.createChangeChart('chart-demo2', chart.chart_type);
             }, 500);
+        },
+        applyChartLayout(updateBackend = true) {
+            let layout = this.chartLayoutInput.split(';');
+            let maxChartId = this.chartData.length;
+            if (layout.length > this.chartData.length) {
+                this.makeToast('Invalid layout: too many rows', 'error');
+                return;
+            }
+            let newLayout = [];
+            for (let i = 0; i < layout.length; i++) {
+                let row = layout[i].split(',');
+                if (row.length > 2 || row.length < 1) {
+                    this.makeToast('Invalid layout: too many/less charts in a row, shoud be 1 or 2', 'error');
+                    return;
+                }
+                for (let j = 0; j < row.length; j++) {
+                    let chartId = parseInt(row[j]);
+                    if (chartId > maxChartId || chartId < 1) {
+                        this.makeToast('Invalid layout: chart id out of range', 'error');
+                        return;
+                    }
+                }
+                newLayout.push(row);
+            }
+
+            console.log(newLayout);
+
+            this.chartLayout = newLayout;
+            this.appData.layout = this.chartLayoutInput;
+
+            if (updateBackend) this.updateApplication();
+        },
+        updateApplication() {
+            this.loadingUpdateApp = true;
+            fetchWrapper(`/api/account/app/${this.appId}`, {
+                method: 'PUT',
+                body: JSON.stringify(this.appData),
+            }).then((data) => {
+                this.makeToast('Application updated successfully');
+            }).catch((error) => {
+                this.makeToast('Failed to update application: ' + error, 'error');
+            }).finally(() => {
+                this.loadingUpdateApp = false;
+            });
         }
     }
 }
@@ -426,7 +530,7 @@ export default {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 

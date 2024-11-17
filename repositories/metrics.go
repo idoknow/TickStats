@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/soulter/tickstats/models"
@@ -10,12 +12,17 @@ import (
 
 type NumberMetricsRepository interface {
 	Add(metric *models.BasicMetricData) error
-	GetPlainNumberVal(appId string,
+	GetSimpleLine(appId string,
 		keyName string,
 		extraConfig map[string]interface{},
 		from int64,
 		to int64) ([]models.BasicMetricOutput, error)
-	GetPlainStringVal(appId string,
+	GetSimplePie(appId string,
+		keyName string,
+		extraConfig map[string]interface{},
+		from int64,
+		to int64) ([]models.BasicMetricOutput, error)
+	GetTable(appId string,
 		keyName string,
 		extraConfig map[string]interface{},
 		from int64,
@@ -34,7 +41,7 @@ func (r *metricsRepository) Add(metric *models.BasicMetricData) error {
 	return r.db.Create(metric).Error
 }
 
-func (r *metricsRepository) GetPlainNumberVal(
+func (r *metricsRepository) GetSimpleLine(
 	appId string,
 	keyName string,
 	extraConfig map[string]interface{},
@@ -112,7 +119,7 @@ func (r *metricsRepository) GetPlainNumberVal(
 	return metrics, err
 }
 
-func (r *metricsRepository) GetPlainStringVal(
+func (r *metricsRepository) GetSimplePie(
 	appId string,
 	keyName string,
 	extraConfig map[string]interface{},
@@ -133,4 +140,75 @@ func (r *metricsRepository) GetPlainStringVal(
 	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
 	err = r.db.Raw(query, keyName, appId, keyName, from, to).Scan(&metrics).Error
 	return metrics, err
+}
+
+func (r *metricsRepository) GetTable(
+	appId string,
+	keyName string,
+	extraConfig map[string]interface{},
+	from int64,
+	to int64) ([]models.BasicMetricOutput, error) {
+	var err error
+	query := `
+		SELECT EXTRACT(EPOCH FROM time)::bigint as k, ` + buildSelectColumns(keyName) + `
+		FROM basic_metric_data
+		WHERE app_id = ?
+		AND time >= to_timestamp(?)
+		AND time <= to_timestamp(?)
+	`
+	var metrics []models.BasicMetricOutput = []models.BasicMetricOutput{}
+
+	rows, err := r.db.Raw(query, appId, from, to).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+
+		err = rows.Scan(valuePtrs...)
+		if err != nil {
+			return nil, err
+		}
+		// parse values
+		var metric models.BasicMetricOutput
+		for i, col := range columns {
+			if col == "k" {
+				metric.Key = values[i].(int64)
+			} else {
+				if metric.Value == nil {
+					metric.Value = []interface{}{}
+				}
+				metric.Value = append(metric.Value.([]interface{}), values[i])
+			}
+		}
+		metrics = append(metrics, metric)
+	}
+
+	return metrics, err
+}
+
+func buildSelectColumns(keyName string) string {
+	// keyName 是逗号分隔的字符串
+	keyNames := strings.Split(keyName, ",")
+
+	columns := ""
+	for i, key := range keyNames {
+		if i > 0 {
+			columns += ", "
+		}
+		columns += "value->>'" + key + "' as v" + strconv.Itoa(i)
+	}
+	return columns
 }

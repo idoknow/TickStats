@@ -1,17 +1,29 @@
 <template>
-    <div :id="chartData.chart_id" style="width: 100%; margin-top: 16px; height: 350px">
+    <div v-show="!initLoaded" style="display: flex; justify-content: center; align-items: center; height: 350px; flex-direction: column">
+        <small>Hang On...</small>   
+        <v-progress-linear
+        color="deep-purple-accent-4"
+        height="6"
+        style="width: 50%"
+        indeterminate
+        rounded
+        ></v-progress-linear>    
+         
     </div>
-    <div style="display: flex; flex-direction: column; align-items: center">
+    <div v-show="initLoaded" :id="chartData.chart_id" style="margin-top: 16px; height: 300px; min-width: 100%; display: flex; justify-content: center; align-items: center;">
+    </div>
+    <div v-show="initLoaded" style="display: flex; flex-direction: column; align-items: center">
         <div>
             <small style="margin-left: 8px">From <span style="font-weight: bold;">{{
                 humanReadableTime(valueTimeSeries[value[0]]) }}</span> to <span style="font-weight: bold;">{{
                         humanReadableTime(valueTimeSeries[value[1]]) }}</span></small>
-            <v-btn :loading="loading" variant="outlined" size="small" style="margin-left: 16px" @click="_getMetric(valueTimeSeries[value[0]],
+            <v-btn :loading="loading" variant="outlined" size="x-small" style="margin-left: 16px" @click="_getMetric(valueTimeSeries[value[0]],
                 valueTimeSeries[value[1]])">Apply</v-btn>
         </div>
-        <v-range-slider :min="min" :max="max" style="width: 100%; max-width: 700px;" step="1" color="primary"
+        <v-range-slider :min="min" :max="max" style="width: 90%; max-width: 700px;" step="1" color="primary"
             v-model="value" strict></v-range-slider>
     </div>
+    
 
 </template>
 
@@ -25,6 +37,7 @@ export default {
     },
     data() {
         return {
+            initLoaded: false,
             loading: false,
             min: 0,
             max: 2 * 24 * 7,
@@ -35,11 +48,13 @@ export default {
         };
     },
     mounted() {
-        window.addEventListener('resize', () => {
+        // 当div的宽度发生变化时，重新渲染图表
+        new ResizeObserver(() => {
             if (this.chart) {
                 this.chart.resize();
             }
-        });
+        }).observe(document.getElementById(this.chartData.chart_id));
+
         this.generateTimeStampSeries(this.StepSec);
         this.value = [this.valueTimeSeries.length - 48, this.valueTimeSeries.length - 1];
         this._getMetric(this.valueTimeSeries[this.value[0]], this.valueTimeSeries[this.value[1]]);
@@ -51,6 +66,7 @@ export default {
                 if (this.chart) this.chart.dispose();
                 this.chart = new Chart(this.chartData.chart_id)
                 this.chart.initChart(this.chartData.option);
+                this.initLoaded = true;
                 this.loading = false;
             });
         },

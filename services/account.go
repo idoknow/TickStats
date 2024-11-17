@@ -12,6 +12,7 @@ type AccountService interface {
 	CreateApplication(application *models.Application) error
 	DeleteApplication(accountId int, appId string) error
 	GetApplications(accountId int) ([]models.Application, error)
+	UpdateApplication(accountId int, application *models.Application) error
 	CreateChart(models.Chart) error
 	DeleteChart(account_id int, chartId string) error
 	UpdateChart(accountId int, chart *models.Chart) error
@@ -119,6 +120,28 @@ func (service *accountService) GetApplications(accountId int) ([]models.Applicat
 	}
 
 	return applications, nil
+}
+
+func (service * accountService) UpdateApplication(accountId int, application *models.Application) error {
+	// Find the application by application ID
+	oldApplication, err := service.applicationRepository.FindByAppID(application.AppId)
+	if err != nil {
+		return err
+	}
+
+	// Check if the application belongs to the account
+	if oldApplication.AccountId != accountId {
+		return utils.ErrUnauthorized
+	}
+
+	// TODO(Soulter): check the layout format
+
+	// Update the application in the database
+	if err := service.applicationRepository.Update(application); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (service *accountService) CreateChart(chart models.Chart) error {

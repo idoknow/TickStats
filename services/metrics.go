@@ -82,9 +82,12 @@ func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string
 
 	switch chart.ChartType {
 	case models.SimpleLine:
-		metrics, err = s.metricsRepository.GetPlainNumberVal(appId, chart.KeyName, chart.ExtraConfig, from, to)
+		metrics, err = s.metricsRepository.GetSimpleLine(appId, chart.KeyName, chart.ExtraConfig, from, to)
 	case models.SimplePie:
-		metrics, err = s.metricsRepository.GetPlainStringVal(appId, chart.KeyName, chart.ExtraConfig, from, to)
+		metrics, err = s.metricsRepository.GetSimplePie(appId, chart.KeyName, chart.ExtraConfig, from, to)
+	case models.Table:
+		metrics, err = s.metricsRepository.GetTable(appId, chart.KeyName, chart.ExtraConfig, from, to)
+		
 	default:
 		return nil, utils.ErrInvalidChartType
 	}
