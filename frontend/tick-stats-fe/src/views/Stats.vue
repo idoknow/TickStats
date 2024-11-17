@@ -302,7 +302,13 @@ export default {
                 this.makeToast('Chart created successfully');
                 this.getCharts();
             } catch (error) {
-                this.makeToast('Failed to create chart: ' + error.data.message, 'error');
+                let errorText = 'Failed to create chart';
+                if (error.data) {
+                    errorText += error.data.message;
+                } else {
+                    errorText += error;
+                }
+                this.makeToast(errorText, 'error');
             } finally {
                 this.loading = false;
             }

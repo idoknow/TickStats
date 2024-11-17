@@ -1,4 +1,5 @@
 import { fetchWrapper } from "./utils"
+import { chartsPresetConfigs } from "./utils"
 
 class ChartForm {
     constructor() {
@@ -24,7 +25,24 @@ class ChartForm {
                 throw new Error('key_name can only contain letters, numbers and underscores')
             }
         }
-        this.data.key_name = this.key_name_input.join(',')
+        let keys = this.key_name_input.join(',')
+        if (keys.length > 255) {
+            throw new Error('key_name is too long')
+        }
+
+        if (this.key_name_input.length > 1) {
+            for (let preset of chartsPresetConfigs) {
+                console.log(preset)
+                if (this.data.chart_type === preset.chart_type) {
+                    if (!preset.multiple_keys) {
+                        throw new Error('multiple keys are not allowed for this chart type')
+                    }
+                }
+            }
+        }
+
+        this.data.key_name = keys
+
         return true
     }
 
