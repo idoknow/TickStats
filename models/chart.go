@@ -1,7 +1,7 @@
 package models
 
 import (
-    "github.com/soulter/tickstats/utils"
+	"github.com/soulter/tickstats/utils"
 )
 
 type ChartType string
@@ -9,7 +9,7 @@ type ChartType string
 const (
 	SimpleLine ChartType = "simple_line"
 	SimplePie  ChartType = "simple_pie"
-	Table 	ChartType = "table"
+	Table      ChartType = "table"
 )
 
 type Chart struct {
@@ -21,6 +21,9 @@ type Chart struct {
 	ExtraConfig utils.JSONMap `json:"extra_config" gorm:"type:text"`
 	Description string        `json:"description"`
 	Public      bool          `json:"public"`
+	RowId       int64         `json:"row_id"`
 	CreatedTime string        `json:"created_time"`
 	UpdatedTime string        `json:"updated_time"`
 }
+
+var ChartUpdatableFields = []string{"chart_name", "chart_type", "key_name", "extra_config", "description", "public", "row_id", "updated_time"}

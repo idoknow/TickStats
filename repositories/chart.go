@@ -11,6 +11,8 @@ type ChartRepository interface {
 	Update(chart *models.Chart) error
 	FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error)
 	FindByChartID(chartId string) (*models.Chart, error)
+	GetMaxRowID(appId string) (int64, error)
+	GetCountOfRowID(chartId string, rowId int64) (int64, error)
 }
 
 type chartRepository struct {
@@ -30,7 +32,7 @@ func (r *chartRepository) Delete(chartId string) error {
 }
 
 func (r *chartRepository) Update(chart *models.Chart) error {
-	return r.db.Save(chart).Error
+	return r.db.Model(chart).Where("chart_id = ?", chart.ChartId).Select(models.ChartUpdatableFields).Updates(chart).Error
 }
 
 func (r *chartRepository) FindByAppID(appId string, onlyPublic bool) ([]models.Chart, error) {
@@ -59,4 +61,24 @@ func (r *chartRepository) FindByChartID(chartId string) (*models.Chart, error) {
 	}
 
 	return &chart, nil
+}
+
+func (r *chartRepository) GetMaxRowID(appId string) (int64, error) {
+	var chart models.Chart
+	err := r.db.Where("app_id = ?", appId).Order("row_id desc").First(&chart).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return chart.RowId, nil
+}
+
+func (r *chartRepository) GetCountOfRowID(chartId string, rowId int64) (int64, error) {
+	var count int64
+	err := r.db.Model(&models.Chart{}).Where("chart_id = ? AND row_id = ?", chartId, rowId).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

@@ -16,4 +16,5 @@ var (
 	ErrInvalidTimeRange = fmt.Errorf("invalid time range")
 	ErrTimeRangeTooLong = fmt.Errorf("time range too long")
 	ErrChartNotFound    = fmt.Errorf("chart not found")
+	ErrInvalidRowId     = fmt.Errorf("invalid row id")
 )

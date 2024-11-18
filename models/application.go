@@ -7,7 +7,6 @@ type Application struct {
 	Public      *bool  `json:"public" binding:"required"`
 	AccountId   int    `json:"-"`
 	Description string `json:"description" binding:"max=512"`
-	Layout 	    string `json:"layout"`
 	CreatedTime string `json:"created_time"`
 	UpdatedTime string `json:"updated_time"`
 }

@@ -9,10 +9,8 @@
                 </h1>
                 <v-dialog max-width="600">
                     <template v-slot:activator="{ props: activatorProps }">
-                        <v-btn icon v-bind:="activatorProps" v-if="isOwner" variant="plain" style="margin-left: 16px;"
-                            color="primary" size="70">
-                            <v-icon>mdi-cog</v-icon>
-                        </v-btn>
+                        <v-fab icon="mdi-cog" color="green" size="52"
+                            style="position: fixed; right: 80px; bottom: 120px; z-index: 1000;" v-bind:="activatorProps" v-if="isOwner"></v-fab>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -34,17 +32,26 @@
                                         <v-divider></v-divider>
                                     </v-list-item>
                                 </v-list>
-                                <div v-if="chartData.length > 0" style="margin-top: 16px;">
-                                    <v-text-field v-model="chartLayoutInput" label="Layout" variant="outlined"
-                                        append-icon="mdi-check" @click:append="applyChartLayout" :loading="loadingUpdateApp">
-                                    </v-text-field>
-                                    <small>布局：分号分隔每一可视化行，逗号分隔每一行中的视图 ID。</small>
+
+
+                                <div style="margin-top: 24px;">
+                                    <v-textarea v-model="appData.description" label="Application Description"
+                                        variant="outlined" append-icon="mdi-check" @click:append="updateApplication"
+                                        :loading="loadingUpdateApp">
+                                    </v-textarea>
                                 </div>
 
-                                <div style="margin-top: 16px;">
-                                    <v-textarea v-model="appData.description" label="Application Description" variant="outlined"
-                                        append-icon="mdi-check" @click:append="updateApplication" :loading="loadingUpdateApp">
-                                    </v-textarea>
+                                <div v-if="chartData.length > 0" style="margin-top: 8px;">
+                                    <h3 style="margin-bottom: 8px;">布局</h3>
+                                    <div v-for="(row, index) in chartLayout" :key="index">
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="margin-right: 8px; font-weight: 1000;">第 {{ index + 1 }}
+                                                行</span>
+                                            <span v-for="(chartIdx, index) in row" :key="chartIdx">
+                                                <v-chip>{{ chartData[chartIdx].chart_name }}</v-chip>
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <span v-if="chartData.length === 0">No charts yet</span>
@@ -172,20 +179,20 @@
         <div style="padding-left: 16px; padding-right: 16px; width: 100%">
             <v-row v-for="(row, index) in chartLayout" :key="index" align="center" justify="center">
                 <v-col v-for="(chartIdx, index) in row" :key="chartIdx" cols="12" md="6" v-if="row.length == 2">
-                    <SimplePie v-if="chartData[chartIdx - 1].chart_type == 'simple_pie'"
-                        :chart-data="chartData[chartIdx - 1]">
+                    <SimplePie v-if="chartData[chartIdx].chart_type == 'simple_pie'" :chart-data="chartData[chartIdx]">
                     </SimplePie>
-                    <BasicChart v-else-if="chartData[chartIdx - 1].chart_type == 'simple_line'"
-                        :chart-data="chartData[chartIdx - 1]"></BasicChart>
-                    <Table v-else :chart-data="chartData[chartIdx - 1]"></Table>
+                    <BasicChart v-else-if="chartData[chartIdx].chart_type == 'simple_line'"
+                        :chart-data="chartData[chartIdx]">
+                    </BasicChart>
+                    <Table v-else :chart-data="chartData[chartIdx]"></Table>
                 </v-col>
                 <v-col v-for="(chartIdx, index) in row" :key="chartIdx" cols="12" v-if="row.length == 1">
-                    <SimplePie v-if="chartData[chartIdx - 1].chart_type == 'simple_pie'"
-                        :chart-data="chartData[chartIdx - 1]">
+                    <SimplePie v-if="chartData[chartIdx].chart_type == 'simple_pie'" :chart-data="chartData[chartIdx]">
                     </SimplePie>
-                    <BasicChart v-else-if="chartData[chartIdx - 1].chart_type == 'simple_line'"
-                        :chart-data="chartData[chartIdx - 1]"></BasicChart>
-                    <Table v-else :chart-data="chartData[chartIdx - 1]"></Table>
+                    <BasicChart v-else-if="chartData[chartIdx].chart_type == 'simple_line'"
+                        :chart-data="chartData[chartIdx]">
+                    </BasicChart>
+                    <Table v-else :chart-data="chartData[chartIdx]"></Table>
                 </v-col>
             </v-row>
         </div>
@@ -266,10 +273,8 @@ export default {
             isOwner: false,
             global: useGlobalStore(),
             chartsPresetConfigs: chartsPresetConfigs,
-            chartLayoutInput: '',
-            chartLayout: [],
-            
             loadingUpdateApp: false,
+            chartLayout: [] // 存储了 chartid 在行中的位置，二维数组。
         }
     },
     mounted() {
@@ -406,15 +411,27 @@ export default {
             } else {
                 this.chartData = _chartData;
 
-                if (!this.appData.layout) {
-                    for (let i = 0; i < this.chartData.length; i++) {
-                        this.chartLayout.push([i]);
+                let rowMap = {}
+                let _id = 1e5;
+                for (let i = 0; i < this.chartData.length; i++) {
+                    if (!this.chartData[i].row_id) {
+                        this.chartData[i].row_id = _id++;
                     }
-                } else {
-                    this.chartLayoutInput = this.appData.layout;
-                    this.applyChartLayout(false);
+                    if (!rowMap[this.chartData[i].row_id]) {
+                        rowMap[this.chartData[i].row_id] = [];
+                    }
+                    rowMap[this.chartData[i].row_id].push(i);
                 }
+                // sort the rowMap by key
+                let keys = Object.keys(rowMap);
+                keys.sort((a, b) => {
+                    return a - b;
+                });
+                this.chartLayout = keys.map((key) => {
+                    return rowMap[key];
+                });
 
+                console.log(this.chartLayout);
             }
         },
         handleEmptyApp() {
@@ -476,35 +493,7 @@ export default {
             }, 500);
         },
         applyChartLayout(updateBackend = true) {
-            let layout = this.chartLayoutInput.split(';');
-            let maxChartId = this.chartData.length;
-            if (layout.length > this.chartData.length) {
-                this.makeToast('Invalid layout: too many rows', 'error');
-                return;
-            }
-            let newLayout = [];
-            for (let i = 0; i < layout.length; i++) {
-                let row = layout[i].split(',');
-                if (row.length > 2 || row.length < 1) {
-                    this.makeToast('Invalid layout: too many/less charts in a row, shoud be 1 or 2', 'error');
-                    return;
-                }
-                for (let j = 0; j < row.length; j++) {
-                    let chartId = parseInt(row[j]);
-                    if (chartId > maxChartId || chartId < 1) {
-                        this.makeToast('Invalid layout: chart id out of range', 'error');
-                        return;
-                    }
-                }
-                newLayout.push(row);
-            }
 
-            console.log(newLayout);
-
-            this.chartLayout = newLayout;
-            this.appData.layout = this.chartLayoutInput;
-
-            if (updateBackend) this.updateApplication();
         },
         updateApplication() {
             this.loadingUpdateApp = true;
@@ -536,7 +525,7 @@ export default {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 1000px;
+    max-width: 1300px;
     margin: 0 auto;
 }
 

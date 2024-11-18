@@ -122,7 +122,7 @@ func (service *accountService) GetApplications(accountId int) ([]models.Applicat
 	return applications, nil
 }
 
-func (service * accountService) UpdateApplication(accountId int, application *models.Application) error {
+func (service *accountService) UpdateApplication(accountId int, application *models.Application) error {
 	// Find the application by application ID
 	oldApplication, err := service.applicationRepository.FindByAppID(application.AppId)
 	if err != nil {
@@ -133,8 +133,6 @@ func (service * accountService) UpdateApplication(accountId int, application *mo
 	if oldApplication.AccountId != accountId {
 		return utils.ErrUnauthorized
 	}
-
-	// TODO(Soulter): check the layout format
 
 	// Update the application in the database
 	if err := service.applicationRepository.Update(application); err != nil {
@@ -150,6 +148,13 @@ func (service *accountService) CreateChart(chart models.Chart) error {
 	chart.ChartId = utils.GenerateUUID("chart")
 	chart.CreatedTime = utils.CurrentTime()
 	chart.UpdatedTime = utils.CurrentTime()
+
+	// Calculate RowID
+	maxRowID, err := service.chartRepository.GetMaxRowID(chart.AppId)
+	if err != nil {
+		return err
+	}
+	chart.RowId = maxRowID + 1
 
 	// Save the chart to the database
 	if err := service.chartRepository.Create(&chart); err != nil {
@@ -202,6 +207,20 @@ func (service *accountService) UpdateChart(accountId int, chart *models.Chart) e
 	if application.AccountId != accountId {
 		return utils.ErrUnauthorized
 	}
+
+	// Check the row ID
+	if chart.RowId <= 0 {
+		return utils.ErrInvalidRowId
+	}
+	rowCnt, err := service.chartRepository.GetCountOfRowID(chart.ChartId, chart.RowId)
+	if err != nil {
+		return err
+	}
+	if rowCnt > 1 {
+		return utils.ErrInvalidRowId
+	}
+
+	chart.UpdatedTime = utils.CurrentTime()
 
 	// Update the chart in the database
 	if err := service.chartRepository.Update(chart); err != nil {
