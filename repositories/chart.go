@@ -65,8 +65,11 @@ func (r *chartRepository) FindByChartID(chartId string) (*models.Chart, error) {
 
 func (r *chartRepository) GetMaxRowID(appId string) (int64, error) {
 	var chart models.Chart
-	err := r.db.Where("app_id = ?", appId).Order("row_id desc").First(&chart).Error
-	if err != nil {
+	result := r.db.Where("app_id = ?", appId).Order("row_id desc").First(&chart)
+	if result.RowsAffected == 0 {
+		return 1, nil
+	}
+	if err := result.Error, err != nil {
 		return 0, err
 	}
 
