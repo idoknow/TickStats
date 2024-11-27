@@ -69,7 +69,7 @@ func (r *chartRepository) GetMaxRowID(appId string) (int64, error) {
 	if result.RowsAffected == 0 {
 		return 1, nil
 	}
-	if err := result.Error, err != nil {
+	if err := result.Error; err != nil {
 		return 0, err
 	}
 
