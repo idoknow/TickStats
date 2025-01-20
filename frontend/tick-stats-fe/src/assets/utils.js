@@ -1,5 +1,6 @@
 import { useGlobalStore } from '@/stores/global';
 import moment from 'moment';
+import { da } from 'vuetify/locale';
 
 export const fetchWrapper = async (url, options = {}) => {
     if (!/^http/.test(url)) {
@@ -91,38 +92,34 @@ export const generatePieDemoData = () => {
         }
     })
 }
-
-export const fillingTimeData = (items, count = 1496, interval_mins = 30) => {
+export const fillingTimeData = (items, interval_mins = 30) => {
+    // 将 items 转换为 [timestamp_ms, value] 的数组
     let arr = items.map((item) => {
-        return [item.k, item.v];
-    })
+        return [item.k, item.v]; // [timestamp_ms, value]
+    });
+
+    if (arr.length === 0) {
+        return arr;
+    }
+    arr.sort((a, b) => a[0] - b[0]);
 
     let data = [];
-    let nearest = new Date();
-    nearest.setSeconds(0);
-    nearest.setMilliseconds(0);
-    let minutes = nearest.getMinutes();
-    if (minutes < 30) {
-        nearest.setMinutes(0);
-    } else {
-        nearest.setMinutes(30);
-    }
-    nearest = nearest.getTime();
+    let currentTime = arr[0][0];
+    const intervalMs = interval_mins * 60 * 1000;
+    const lastTime = arr[arr.length - 1][0];
 
-    let interval = interval_mins * 60 * 1000;
-    for (let i = 0; i < count; i++) {
-        let time = nearest - i * interval
-        let found = arr.find((item) => {
-            return item[0] === time;
-        });
-        if (found) {
-            data.push(found);
+    // 遍历所有时间点，填充缺失的数据
+    while (currentTime <= lastTime) {
+        if (arr.length > 0 && currentTime === arr[0][0]) {
+            data.push(arr.shift());
         } else {
-            data.push([time, 0]);
+            data.push([currentTime, 0]);
         }
+        currentTime += intervalMs;
     }
+
     return data;
-}
+};
 
 export const chartsPresetConfigs = [
     {
@@ -157,6 +154,12 @@ export const chartsPresetConfigs = [
                 default: false,
                 description: "Only display the number of the latest data point."
             },
+            {
+                name: "bucket_mins",
+                type: "number",
+                default: 30,
+                description: "The time interval in minutes for each data point. Default is 30 mins."
+            }
         ],
         multiple_keys: false
     },

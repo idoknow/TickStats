@@ -69,13 +69,13 @@ func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string
 	if from == 0 && to == 0 {
 		// 1 days interval
 		to = utils.GetCurrentTimestamp()
-		from = to - 60*60*24
+		from = to - 60*60*24*30
 	} else {
 		// cannot query more than 7 days
-		if from < utils.GetCurrentTimestamp()-60*60*24*7 {
+		if from < utils.GetCurrentTimestamp()-60*60*24*30 {
 			return nil, utils.ErrInvalidTimeRange
 		}
-		if to-from > 60*60*24*7 {
+		if to-from > 60*60*24*30 {
 			return nil, utils.ErrTimeRangeTooLong
 		}
 	}
@@ -87,7 +87,7 @@ func (s *metricsService) GetByAppID(c *gin.Context, appId string, chartId string
 		metrics, err = s.metricsRepository.GetSimplePie(appId, chart.KeyName, chart.ExtraConfig, from, to)
 	case models.Table:
 		metrics, err = s.metricsRepository.GetTable(appId, chart.KeyName, chart.ExtraConfig, from, to)
-		
+
 	default:
 		return nil, utils.ErrInvalidChartType
 	}

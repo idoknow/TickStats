@@ -59,6 +59,22 @@ func (r *metricsRepository) GetSimpleLine(
 	// method: sum, count, accumulate
 	// distinct_ip: true, false
 
+	// 检查 bucket_mins 是否存在
+	_, ok := extraConfig["bucket_mins"]
+	var bucket_mins int
+	if !ok {
+		bucket_mins = 30
+	} else {
+		bucket_mins, err = strconv.Atoi(extraConfig["bucket_mins"].(string))
+		if err != nil || bucket_mins <= 30 {
+			bucket_mins = 30
+		}
+	}
+
+	data_points := (to - from) / 60 / int64(bucket_mins)
+
+	fmt.Println("data_points: ", data_points)
+
 	switch extraConfig["method"] {
 	case "count":
 		var _v_select string
@@ -68,44 +84,47 @@ func (r *metricsRepository) GetSimpleLine(
 			_v_select = "COUNT(ip) as v"
 		}
 		query := fmt.Sprintf(`
-			SELECT time_bucket('30 minutes', time) as k, %s FROM basic_metric_data 
+			SELECT time_bucket('%d minutes', time) as k, %s FROM basic_metric_data 
 			WHERE app_id = ? AND jsonb_typeof(value->?) = 'number'
 			GROUP BY k 
-			ORDER BY k 
-			LIMIT 1440;
-		`, _v_select)
+			ORDER BY k DESC
+			LIMIT %d;
+		`, bucket_mins, _v_select, data_points)
 		err = r.db.Raw(query, appId, keyName).Scan(&metrics_).Error
 	case "accumulate":
-		query := `
-        WITH RECURSIVE time_series AS (
-            SELECT generate_series(
-                date_trunc('hour', NOW()) - INTERVAL '30 day',
-                date_trunc('hour', NOW() + INTERVAL '30 minutes'),
-                '30 minutes'
-            ) AS time
-        ),
-        metric_data AS (
-            SELECT ts.time as k, COALESCE(SUM((value->>?)::int), 0) as v
-            FROM time_series ts
-            LEFT JOIN basic_metric_data bmd
-            ON bmd.time >= ts.time
-            AND bmd.time < ts.time + INTERVAL '30 minutes'
-            AND bmd.app_id = ?
-            GROUP BY ts.time
-            ORDER BY ts.time
-        )
-        SELECT k, SUM(v) OVER (ORDER BY k) as v
-        FROM metric_data;
-		`
+		query := fmt.Sprintf(`
+			WITH RECURSIVE time_series AS (
+				SELECT generate_series(
+					date_trunc('hour', NOW()) - INTERVAL '30 days',
+					date_trunc('hour', NOW() + INTERVAL '%d minutes'),
+					'%d minutes'
+				) AS time
+			),
+			metric_data AS (
+				SELECT ts.time as k, COALESCE(SUM((value->>$1)::int), 0) as v
+				FROM time_series ts
+				LEFT JOIN basic_metric_data bmd
+				ON bmd.time >= ts.time
+				AND bmd.time < ts.time + INTERVAL '%d minutes'
+				AND bmd.app_id = $2
+				GROUP BY ts.time
+				ORDER BY ts.time
+			)
+			SELECT k, SUM(v) OVER (ORDER BY k) as v
+			FROM metric_data;
+			ORDER BY k DESC
+			LIMIT %d;
+		`, bucket_mins, bucket_mins, bucket_mins, data_points)
 		err = r.db.Raw(query, keyName, appId).Scan(&metrics_).Error
 	default:
 		// sum
-		query := `
-		SELECT time_bucket('30 minutes', time) as k,
+		query := fmt.Sprintf(`
+		SELECT time_bucket('%d minutes', time, NOW()) as k,
 		SUM((value->>?)::numeric) as v FROM basic_metric_data 
 		WHERE app_id = ? AND jsonb_typeof(value->?) = 'number' 
 		GROUP BY k 
-		ORDER BY k LIMIT 1440;`
+		ORDER BY k DESC
+		LIMIT %d;`, bucket_mins, data_points)
 		err = r.db.Raw(query, keyName, appId, keyName).Scan(&metrics_).Error
 	}
 

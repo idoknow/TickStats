@@ -55,6 +55,12 @@ export default {
             await fetchWrapper(`/api/metric/${appid}/${chartid}`, {
                 method: 'GET',
             }).then((data) => {
+                let bucket_mins = chartData.extra_config.bucket_mins;
+                if (!bucket_mins) {
+                    bucket_mins = 30;
+                }
+                bucket_mins = parseInt(bucket_mins);
+                
                 let _display_type = 'default';
                 if (chartData.extra_config.only_represent_number) {
                     _display_type = 'plain_number';
@@ -66,7 +72,7 @@ export default {
                         series: [{
                                 showSymbol: false,
                                 type: 'line',
-                                data: fillingTimeData(data)
+                                data: fillingTimeData(data, bucket_mins)
                             }],
                         _display_type: _display_type,
                     }

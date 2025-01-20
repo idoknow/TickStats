@@ -142,6 +142,12 @@
                                             :label="ops.name" variant="outlined">
                                         </v-select>
                                     </div>
+                                    <div v-else-if="ops.type === 'number'">
+                                        <small>{{ ops.description }}</small>
+                                        <v-text-field v-model="newChart.data.extra_config[ops.name]" :label="ops.name"
+                                            variant="outlined" type="number">
+                                        </v-text-field>
+                                    </div>
                                 </div>
                                 <small>Public charts can be viewed by anyone</small>
                                 <v-checkbox v-model="newChart.data.public" label="Public" color="primary"></v-checkbox>
