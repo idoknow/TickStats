@@ -1,11 +1,15 @@
 # 📈 TickStats
 
+One-stop & lightweight solution for metric collecting and analytics.
+
 > [!TIP]
 > This project is under construction and improvement. Do not use it in production environment and please waiti for the first release! ❤️
 
-One-stop & lightweight solution for metric collecting and analytics.
+## Features
 
+- Lightweight - Docker image size < 20 MB
 - One RESTful API collect all your projects' datas!
+  
   ```json
   {
     "metrics_data": {
@@ -15,6 +19,8 @@ One-stop & lightweight solution for metric collecting and analytics.
     }
   }
   ```
+
+## Demo
 
 ![image](https://github.com/user-attachments/assets/2d8e6267-a3ad-40cb-9957-3310687a5f27)
 
