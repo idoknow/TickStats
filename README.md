@@ -3,7 +3,7 @@
 One-stop & lightweight solution for metric collecting and analytics.
 
 > [!TIP]
-> This project is under construction and improvement. Do not use it in production environment and please waiti for the first release! ❤️
+> This project is under construction and improvement. Do not use it in production environment and please wait for the first release! ❤️
 
 ## Features
 
