@@ -1,6 +1,11 @@
-# TickStats
+# 📈 TickStats
 
-One stop solution for lightweight telemetry and analytics.
+> [!TIP]
+> This project is under construction and improvement.
+
+One-stop & lightweight solution for metric collecting and analytics.
+
+![image](https://github.com/user-attachments/assets/2d8e6267-a3ad-40cb-9957-3310687a5f27)
 
 ## Development
 
